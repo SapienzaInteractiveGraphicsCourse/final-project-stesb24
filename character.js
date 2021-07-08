@@ -7,11 +7,11 @@ function createCharacter(boxWidth, boxHeight, boxNumber) {
     const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
     //Even box = red team; odd box = blue team
     if (boxNumber % 2 == 0) {
-        boxMesh.position.x = -3;
+        boxMesh.position.x = -10;
         boxMaterial.color.set("red");
     }
     else {
-        boxMesh.position.x = 3;
+        boxMesh.position.x = 10;
         boxMaterial.color.set("blue");
     }
     

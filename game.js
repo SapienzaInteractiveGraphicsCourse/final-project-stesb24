@@ -2,7 +2,7 @@ import * as THREE from "./libs/threejs/build/three.module.js";
 import {createCharacter} from "./character.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
-const groundWidth = 16, groundHeight = 16;
+const groundWidth = 50, groundHeight = 50;
 const boxWidth = 1, boxHeight = 2;
 const bulletRadius = 0.2;
 
@@ -24,11 +24,9 @@ function main() {
     world.solver.iterations = 5;
 
     //Creates new cameras
-    function makeCamera() {
+    function makeCamera(near = 1, far = 80) {
         const fov = 50;
         const aspect = 2;       //Canvas default
-        const near = 1;
-        const far = 40;
         return new THREE.PerspectiveCamera(fov, aspect, near, far);
     }
 
@@ -55,10 +53,8 @@ function main() {
 
     //Ground physics
     const groundShape = new CANNON.Plane();
-    const groundBody = new CANNON.Body({
-        mass: 0,            //Static body
-        shape: groundShape
-    });
+    const groundBody = new CANNON.Body( {mass: 0} );          //Static body
+    groundBody.addShape(groundShape);
     groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); //Horizontal
     world.add(groundBody);
 
@@ -79,8 +75,8 @@ function main() {
     };
 
     //Global (detached) camera (in last position of cameras)
-    cameras.push(makeCamera());
-    cameras[cameras.length - 1].position.set(0, 20, 0);
+    cameras.push(makeCamera(40, 62));
+    cameras[cameras.length - 1].position.set(0, 60, 0);
     cameras[cameras.length - 1].lookAt(0, 0, 0);
 
     let camera = cameras[0];        //Start from first player's camera
@@ -93,7 +89,7 @@ function main() {
         const boxAngle = 0.05;
         
         switch (e.code) {
-            case "KeyW":            //Move orward
+            case "KeyW":            //Move forward
                 currentBox.position.x += -Math.sin(currentBox.rotation.y) * boxSpeed;
                 currentBox.position.z += -Math.cos(currentBox.rotation.y) * boxSpeed;
                 break;
@@ -135,9 +131,13 @@ function main() {
         const bulletGeometry = new THREE.SphereGeometry(bulletRadius, widthSegments, heightSegments);
         const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
+
         const currentBox = boxes[currentPlayer];
-        const initialPosition = [currentBox.position.x, boxHeight/2, currentBox.position.z];
-        bulletMesh.position.set(initialPosition);
+        const initialX = currentBox.position.x;
+        const initialY = boxHeight/2;
+        const initialZ = currentBox.position.z;
+        bulletMesh.position.set(initialX, initialY, initialZ);
+
         scene.add(bulletMesh);
 
         //Every bullet has associated the angle of the box, to compute the speed
@@ -150,18 +150,17 @@ function main() {
 
         //Bullet physics
         const bulletShape = new CANNON.Sphere(bulletRadius);
-        const bulletBody = new CANNON.Body({
-            mass: 1,
-            shape: bulletShape
-        });
-        bulletBody.position.set(initialPosition[0], initialPosition[1], initialPosition[2]);
-        const horizontalSpeed = 12;
-        const verticalSpeed = 4;
+        const bulletBody = new CANNON.Body( {mass: 1} );
+        bulletBody.addShape(bulletShape);
+
+        bulletBody.position.set(initialX, initialY, initialZ);
+        const horizontalSpeed = 20;
+        const verticalSpeed = 5;
         bulletBody.velocity.set(-Math.sin(bulletData.rotation) * horizontalSpeed,
             verticalSpeed, -Math.cos(bulletData.rotation) * horizontalSpeed);
 
-        world.addBody(bulletBody);
         bulletBodies.push(bulletBody);
+        world.addBody(bulletBody);
     }
 
     const canvas = document.querySelector("#c");
