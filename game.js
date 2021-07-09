@@ -115,7 +115,7 @@ function main() {
 
         //Bullet physics
         const bulletShape = new CANNON.Sphere(bulletRadius);
-        const bulletBody = new CANNON.Body( {mass: 1} );
+        const bulletBody = new CANNON.Body({mass: 1});
         bulletBody.addShape(bulletShape);
 
         bulletBody.position.set(initialX, initialY, initialZ);
