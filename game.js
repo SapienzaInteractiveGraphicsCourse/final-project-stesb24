@@ -1,8 +1,8 @@
 import * as THREE from "./libs/three.module.js";    //r130
+import {createMap} from "./map.js";
 import {createCharacter} from "./character.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
-const groundWidth = 50, groundHeight = 50;
 const boxWidth = 1, boxHeight = 2;
 const bulletRadius = 0.2;
 
@@ -44,25 +44,12 @@ function main() {
     const ambientLight = new THREE.AmbientLight(lightColor, intensityAmb);
     scene.add(ambientLight);
 
-    //Ground
-    const groundGeometry = new THREE.PlaneGeometry(groundWidth, groundHeight);
-    const groundMaterial = new THREE.MeshPhongMaterial({color: "green"});
-    const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-    groundMesh.rotation.x = -Math.PI / 2;           //Horizontal
-    scene.add(groundMesh);
-
-    //Ground physics
-    const groundShape = new CANNON.Plane();
-    const groundBody = new CANNON.Body( {mass: 0} );          //Static body
-    groundBody.addShape(groundShape);
-    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); //Horizontal
-    world.add(groundBody);
+    createMap(scene, world);
 
     //Create the boxes and their cameras
     for (let i=0; i < players; i++) {
         //Add the box to the scene
-        const boxMesh = createCharacter(boxWidth, boxHeight, i);
-        scene.add(boxMesh);
+        const boxMesh = createCharacter(boxWidth, boxHeight, i, scene);
 
         //Add the camera to the box
         const boxCamera = makeCamera();
