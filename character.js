@@ -1,6 +1,7 @@
 import * as THREE from "./libs/three.module.js";
+import {makeCamera} from "./game.js";
 
-//Create a new box
+//Create a new box and return it with its camera
 function createCharacter(boxWidth, boxHeight, boxNumber, scene) {
     const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxWidth);
     const boxMaterial = new THREE.MeshPhongMaterial();
@@ -19,7 +20,13 @@ function createCharacter(boxWidth, boxHeight, boxNumber, scene) {
 
     scene.add(boxMesh);
 
-    return boxMesh;
+    //Add the camera to the box
+    const boxCamera = makeCamera();
+    boxCamera.position.set(0, boxHeight/2 + 1.5, 3.5);      //Relative to the box
+    boxCamera.lookAt(0, 0, -6.5);
+    boxMesh.add(boxCamera);
+
+    return [boxMesh, boxCamera];
 }
 
 export {createCharacter};

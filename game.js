@@ -8,9 +8,18 @@ const bulletRadius = 0.2;
 
 const boxes = [];
 const cameras = [];
+const bullets = [];
+const bulletBodies = [];
 
 const players = 2;
 let currentPlayer = 0;
+
+//Creates new cameras
+function makeCamera(near = 1, far = 80) {
+    const fov = 50;
+    const aspect = 2;       //Canvas default
+    return new THREE.PerspectiveCamera(fov, aspect, near, far);
+}
 
 //Set up and handle the scene graph (lights, cameras and objects) and physics
 function main() {
@@ -23,40 +32,12 @@ function main() {
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 5;
 
-    //Creates new cameras
-    function makeCamera(near = 1, far = 80) {
-        const fov = 50;
-        const aspect = 2;       //Canvas default
-        return new THREE.PerspectiveCamera(fov, aspect, near, far);
-    }
-
-    //Directional light (sun)
-    const lightColor = "white";
-    const intensityDir = 1.5;
-    const directionalLight = new THREE.DirectionalLight(lightColor, intensityDir);
-    directionalLight.position.set(-6, 4, 2);
-    directionalLight.target.position.set(0, 0, 0);
-    scene.add(directionalLight);
-    scene.add(directionalLight.target);
-
-    //Ambient light
-    const intensityAmb = 0.6;
-    const ambientLight = new THREE.AmbientLight(lightColor, intensityAmb);
-    scene.add(ambientLight);
-
+    //Create all lights and objects
     createMap(scene, world);
 
     //Create the boxes and their cameras
     for (let i=0; i < players; i++) {
-        //Add the box to the scene
-        const boxMesh = createCharacter(boxWidth, boxHeight, i, scene);
-
-        //Add the camera to the box
-        const boxCamera = makeCamera();
-        boxCamera.position.set(0, boxHeight/2 + 1.5, 3.5);      //Relative to the box
-        boxCamera.lookAt(0, 0, -6.5);
-        boxMesh.add(boxCamera);
-
+        const [boxMesh, boxCamera] = createCharacter(boxWidth, boxHeight, i, scene);
         boxes.push(boxMesh);
         cameras.push(boxCamera);
     };
@@ -107,9 +88,6 @@ function main() {
             camera = cameras[currentPlayer];
         }
     }, false);
-
-    const bullets = [];
-    const bulletBodies = [];
 
     //Shoot a new bullet
     function bullet() {
@@ -180,3 +158,5 @@ function main() {
 }
 
 main();
+
+export {makeCamera};

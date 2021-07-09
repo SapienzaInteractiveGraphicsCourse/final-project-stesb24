@@ -2,8 +2,25 @@ import * as THREE from "./libs/three.module.js";
 
 //Create all the objects in the scene and their physics
 function createMap(scene, world) {
+    createLights(scene);
     createGround(scene, world);
     createBunker(scene, world);
+}
+
+function createLights(scene) {
+    //Directional light (sun)
+    const lightColor = "white";
+    const intensityDir = 1.5;
+    const directionalLight = new THREE.DirectionalLight(lightColor, intensityDir);
+    directionalLight.position.set(-6, 4, 2);
+    directionalLight.target.position.set(0, 0, 0);
+    scene.add(directionalLight);
+    scene.add(directionalLight.target);
+
+    //Ambient light
+    const intensityAmb = 0.6;
+    const ambientLight = new THREE.AmbientLight(lightColor, intensityAmb);
+    scene.add(ambientLight);
 }
 
 function createGround(scene, world) {
@@ -36,7 +53,7 @@ function createBunker(scene, world) {
 
     //I use the parameters above to set the dimensions of the walls and their position
     //one with respect to the other
-    
+
     //East wall
     createWall(wallThickness, houseHeight, houseDepth,
         verticalAxis+houseWidth/2, houseHeight/2, horizontalAxis,
