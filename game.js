@@ -1,4 +1,4 @@
-import * as THREE from "./libs/threejs/build/three.module.js";
+import * as THREE from "./libs/three.module.js";    //r130
 import {createCharacter} from "./character.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 

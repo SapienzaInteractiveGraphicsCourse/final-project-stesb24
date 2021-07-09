@@ -1,4 +1,4 @@
-import * as THREE from "./libs/threejs/build/three.module.js";
+import * as THREE from "./libs/three.module.js";
 
 //Create a new box
 function createCharacter(boxWidth, boxHeight, boxNumber) {
