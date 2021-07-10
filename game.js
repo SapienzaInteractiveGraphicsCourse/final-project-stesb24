@@ -11,7 +11,7 @@ const cameras = [];
 const bullets = [];
 const bulletBodies = [];
 
-const players = 2;
+const players = 1;
 let currentPlayer = 0;
 
 //Creates new cameras
@@ -44,7 +44,7 @@ function main() {
     };
 
     //Global (detached) camera (in last position of cameras)
-    cameras.push(makeCamera(40, 62));
+    cameras.push(makeCamera(45, 70));
     cameras[cameras.length - 1].position.set(0, 60, 0);
     cameras[cameras.length - 1].lookAt(0, 0, 0);
 
@@ -92,12 +92,14 @@ function main() {
 
     //Shoot a new bullet
     function bullet() {
+        //Bullet
         const widthSegments = 10;
         const heightSegments = 10;
         const bulletGeometry = new THREE.SphereGeometry(bulletRadius, widthSegments, heightSegments);
         const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
+        //Bullet initial position
         const currentBox = boxes[currentPlayer];
         const initialX = currentBox.position.x;
         const initialY = boxHeight/2;
