@@ -38,6 +38,7 @@ function main() {
     //Create the boxes and their cameras
     for (let i=0; i < players; i++) {
         const [boxMesh, boxCamera] = createCharacter(boxWidth, boxHeight, i, scene);
+
         boxes.push(boxMesh);
         cameras.push(boxCamera);
     };
@@ -103,15 +104,8 @@ function main() {
         const initialZ = currentBox.position.z;
         bulletMesh.position.set(initialX, initialY, initialZ);
 
+        bullets.push(bulletMesh);
         scene.add(bulletMesh);
-
-        //Every bullet has associated the angle of the box, to compute the speed
-        //components over x and z
-        const bulletData = {
-            bullet: bulletMesh,
-            rotation: currentBox.rotation.y
-        };
-        bullets.push(bulletData);
 
         //Bullet physics
         const bulletShape = new CANNON.Sphere(bulletRadius);
@@ -121,8 +115,9 @@ function main() {
         bulletBody.position.set(initialX, initialY, initialZ);
         const horizontalSpeed = 20;
         const verticalSpeed = 5;
-        bulletBody.velocity.set(-Math.sin(bulletData.rotation) * horizontalSpeed,
-            verticalSpeed, -Math.cos(bulletData.rotation) * horizontalSpeed);
+        const angle = currentBox.rotation.y;
+        bulletBody.velocity.set(-Math.sin(angle) * horizontalSpeed,
+            verticalSpeed, -Math.cos(angle) * horizontalSpeed);
 
         bulletBodies.push(bulletBody);
         world.addBody(bulletBody);
@@ -136,9 +131,9 @@ function main() {
         world.step(1/60);
 
         //Copy coordinates from CANNON to THREE for each bullet
-        bullets.forEach((bulletData, index) => {
-            bulletData.bullet.position.copy(bulletBodies[index].position);
-            bulletData.bullet.quaternion.copy(bulletBodies[index].quaternion);
+        bullets.forEach((bullet, index) => {
+            bullet.position.copy(bulletBodies[index].position);
+            bullet.quaternion.copy(bulletBodies[index].quaternion);
         });
 
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
