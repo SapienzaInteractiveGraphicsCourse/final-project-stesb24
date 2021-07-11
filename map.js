@@ -6,10 +6,8 @@ function createMap(scene, world) {
     createLights(scene);
     createGround(scene, world);
     createBunker(scene, world);
-    importBarrel(19.5, -5.5, 0, scene, world);
-    importBarrel(-16, 4, 0, scene, world);
-    importBarrel(-15, 2.8, 1, scene, world);
-    importBarrel(-14, 7, 0, scene, world);
+    createBarrels(scene, world);
+    createTrees(scene, world);
 }
 
 function createLights(scene) {
@@ -65,7 +63,7 @@ function createBunker(scene, world) {
     const horizontalAxis = -12;     //Where to place the bunker on the z axis
     const bunkerWidth = 11;
     const bunkerDepth = 18;
-    const bunkerHeight = 5;
+    const bunkerHeight = 4;
     const wallThickness = 0.5;
     const entranceWidth = 2.5;
 
@@ -140,8 +138,8 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
     normalBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
 
     //Box
-    const boxGeometry = new THREE.BoxGeometry(width, height, depth);
-    const boxMaterials = [                  //Color + texture + normal map for each face
+    const wallGeometry = new THREE.BoxGeometry(width, height, depth);
+    const wallMaterials = [                  //Color + texture + normal map for each face
         new THREE.MeshPhongMaterial({
             color: "chocolate",
             map: textureRight,
@@ -173,23 +171,30 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
             normalMap: normalBack
         })
     ];
-    const boxMesh = new THREE.Mesh(boxGeometry, boxMaterials);
-    boxMesh.position.set(x, y, z);
+    const wallMesh = new THREE.Mesh(wallGeometry, wallMaterials);
+    wallMesh.position.set(x, y, z);
     if (timesToRepeatHorizontally == 3) {       //East and west faces
-        boxMesh.rotation.y = Math.PI / 2;
+        wallMesh.rotation.y = Math.PI / 2;
     }
-    scene.add(boxMesh);
+    scene.add(wallMesh);
 
     //Box physics
     const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
-    const boxShape = new CANNON.Box(halfExtents);
-    const boxBody = new CANNON.Body({mass: 0});
-    boxBody.addShape(boxShape);
-    boxBody.position.set(x, y, z);
+    const wallShape = new CANNON.Box(halfExtents);
+    const wallBody = new CANNON.Body({mass: 0});
+    wallBody.addShape(wallShape);
+    wallBody.position.set(x, y, z);
     if (timesToRepeatHorizontally == 3) {       //East and west faces
-        boxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+        wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
     }
-    world.add(boxBody);
+    world.add(wallBody);
+}
+
+function createBarrels(scene, world) {
+    importBarrel(19.5, -5.5, 0, scene, world);
+    importBarrel(-16, 4, 0, scene, world);
+    importBarrel(-15, 2.8, 1, scene, world);
+    importBarrel(-14, 7, 0, scene, world);
 }
 
 //Import the barrel model, apply its texture and place it in the scene;
@@ -215,12 +220,12 @@ function importBarrel(x, z, type, scene, world) {
         scene.add(object);
 
         //Get barrel dimensions and coordinates to create its body for physics
-        const box = new THREE.Box3().setFromObject(object);     //Model's bounding box
-        const boxSize = box.getSize(new THREE.Vector3());       //Bounding box dimensions
+        const boundingBox = new THREE.Box3().setFromObject(object);     //Model's bounding box
+        const boxSize = boundingBox.getSize(new THREE.Vector3());       //Bounding box dimensions
         const width = boxSize.x;
         const height = boxSize.y;
         const depth = boxSize.z;
-        const y = box.getCenter(new THREE.Vector3()).y;         //Bouding box y coordinate
+        const y = boundingBox.getCenter(new THREE.Vector3()).y;         //Bouding box y coordinate
 
         //Barrel physics
         const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
@@ -230,6 +235,37 @@ function importBarrel(x, z, type, scene, world) {
         boxBody.position.set(x, y, z);
         world.add(boxBody);
     });
+}
+
+function createTrees(scene) {
+    createTree(-9, -18, scene);
+    createTree(-13, -15, scene);
+    createTree(2.5, -3, scene);
+    createTree(7, 15, scene);
+}
+
+//Place the tree in the given coordinates
+function createTree(x, z, scene) {
+    //Trunk
+    const trunkRadius = 0.4;
+    const trunkHeight = 1.5;
+    const trunkRadialSegments = 8;
+    const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius, trunkHeight, trunkRadialSegments);
+    const trunkMaterial = new THREE.MeshPhongMaterial({color: "saddleBrown"});
+    const trunkMesh = new THREE.Mesh(trunkGeometry, trunkMaterial);
+    trunkMesh.position.set(x, trunkHeight / 2, z);
+
+    //Foliage
+    const foliageRadius = 2.2;
+    const foliageHeight = 6;
+    const foliageRadialSegments = 16;
+    const foliageGeometry = new THREE.ConeGeometry(foliageRadius, foliageHeight, foliageRadialSegments);
+    const foliageMaterial = new THREE.MeshPhongMaterial({color: "green"});
+    const foliageMesh = new THREE.Mesh(foliageGeometry, foliageMaterial);
+    foliageMesh.position.set(x, trunkHeight + foliageHeight / 2, z);
+
+    scene.add(trunkMesh);
+    scene.add(foliageMesh);
 }
 
 export {createMap};
