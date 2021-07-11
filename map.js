@@ -1,10 +1,16 @@
 import * as THREE from "./libs/three.module.js";
+import {OBJLoader} from "./libs/OBJLoader.js";
+import {MTLLoader} from "./libs/MTLLoader.js";
 
 //Create all the objects in the scene and their physics
 function createMap(scene, world) {
     createLights(scene);
     createGround(scene, world);
     createBunker(scene, world);
+    importBarrel(19.5, -5.5, 0, scene);
+    importBarrel(-16, 4, 0, scene);
+    importBarrel(-15, 2.8, 1, scene);
+    importBarrel(-14, 7, 0, scene);
 }
 
 function createLights(scene) {
@@ -92,7 +98,7 @@ function createBunker(scene, world) {
 //Input params: dimensions - texture horizontal repetitions - coordinates - scene and world
 //Take the dimensions of the wall and its coordinates and create it
 //timesToRepeatHorizontally also determines the orientation (angle) of the wall:
-// - 3 repetitions for east and west wall (-> 90°)
+// - 3 repetitions for east and west walls (-> 90°)
 // - 2 repetitions for north wall (-> 0°)
 // - 0.75 repetitions for south walls (-> 0°)
 function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, scene, world) {
@@ -136,7 +142,7 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
 
     //Box
     const boxGeometry = new THREE.BoxGeometry(width, height, depth);
-    const boxMaterials = [                  //Color + texture + normal map
+    const boxMaterials = [                  //Color + texture + normal map for each face
         new THREE.MeshPhongMaterial({
             color: "chocolate",
             map: textureRight,
@@ -170,7 +176,7 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
     ];
     const boxMesh = new THREE.Mesh(boxGeometry, boxMaterials);
     boxMesh.position.set(x, y, z);
-    if (timesToRepeatHorizontally == 3) {       //East and west faces
+    if (timesToRepeatHorizontally == 3) {
         boxMesh.rotation.y = Math.PI / 2;
     }
     scene.add(boxMesh);
@@ -185,6 +191,29 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
         boxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
     }
     world.add(boxBody);
+}
+
+//Import the barrel model, apply its texture and place it in the scene
+//type = 0 -> closed barrel; type = 1 -> barrel with water
+function importBarrel(x, z, type, scene) {
+    //Load barrel texture
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load("./textures/barrel_" + type + ".png");
+    const material = new THREE.MeshPhongMaterial({map: texture});
+
+    //Load barrel
+    const objLoader = new OBJLoader();
+    objLoader.load("./models/barrel.obj", (object) => {
+        object.traverse((node) => {       //Need to traverse the object (it's a simple one in this case)
+            if (node.isMesh) {
+                node.material = material;
+            }
+        })
+
+        object.scale.set(0.03, 0.03, 0.03);     //Scale to appropriate size
+        object.position.set(x, 0, z);
+        scene.add(object);
+    });
 }
 
 export {createMap};
