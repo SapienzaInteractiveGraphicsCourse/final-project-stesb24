@@ -1,16 +1,15 @@
 import * as THREE from "./libs/three.module.js";
 import {OBJLoader} from "./libs/OBJLoader.js";
-import {MTLLoader} from "./libs/MTLLoader.js";
 
 //Create all the objects in the scene and their physics
 function createMap(scene, world) {
     createLights(scene);
     createGround(scene, world);
     createBunker(scene, world);
-    importBarrel(19.5, -5.5, 0, scene);
-    importBarrel(-16, 4, 0, scene);
-    importBarrel(-15, 2.8, 1, scene);
-    importBarrel(-14, 7, 0, scene);
+    importBarrel(19.5, -5.5, 0, scene, world);
+    importBarrel(-16, 4, 0, scene, world);
+    importBarrel(-15, 2.8, 1, scene, world);
+    importBarrel(-14, 7, 0, scene, world);
 }
 
 function createLights(scene) {
@@ -176,7 +175,7 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
     ];
     const boxMesh = new THREE.Mesh(boxGeometry, boxMaterials);
     boxMesh.position.set(x, y, z);
-    if (timesToRepeatHorizontally == 3) {
+    if (timesToRepeatHorizontally == 3) {       //East and west faces
         boxMesh.rotation.y = Math.PI / 2;
     }
     scene.add(boxMesh);
@@ -193,26 +192,43 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
     world.add(boxBody);
 }
 
-//Import the barrel model, apply its texture and place it in the scene
+//Import the barrel model, apply its texture and place it in the scene;
+//then take the barrel's sizes and use them to create its physics
 //type = 0 -> closed barrel; type = 1 -> barrel with water
-function importBarrel(x, z, type, scene) {
+function importBarrel(x, z, type, scene, world) {
     //Load barrel texture
     const textureLoader = new THREE.TextureLoader();
     const texture = textureLoader.load("./textures/barrel_" + type + ".png");
     const material = new THREE.MeshPhongMaterial({map: texture});
 
-    //Load barrel
+    //Load barrel and apply texture
     const objLoader = new OBJLoader();
     objLoader.load("./models/barrel.obj", (object) => {
         object.traverse((node) => {       //Need to traverse the object (it's a simple one in this case)
             if (node.isMesh) {
                 node.material = material;
             }
-        })
+        });
 
         object.scale.set(0.03, 0.03, 0.03);     //Scale to appropriate size
         object.position.set(x, 0, z);
         scene.add(object);
+
+        //Get barrel dimensions and coordinates to create its body for physics
+        const box = new THREE.Box3().setFromObject(object);     //Model's bounding box
+        const boxSize = box.getSize(new THREE.Vector3());       //Bounding box dimensions
+        const width = boxSize.x;
+        const height = boxSize.y;
+        const depth = boxSize.z;
+        const y = box.getCenter(new THREE.Vector3()).y;         //Bouding box y coordinate
+
+        //Barrel physics
+        const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
+        const boxShape = new CANNON.Box(halfExtents);
+        const boxBody = new CANNON.Body({mass: 0});
+        boxBody.addShape(boxShape);
+        boxBody.position.set(x, y, z);
+        world.add(boxBody);
     });
 }
 
