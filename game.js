@@ -37,10 +37,12 @@ function main() {
 
     //Create the boxes and their cameras
     for (let i=0; i < players; i++) {
-        const [boxMesh, boxCamera] = createCharacter(boxWidth, boxHeight, i, scene);
+        const [boxMesh, boxCamera] = createCharacter(boxWidth, boxHeight, i);
 
         boxes.push(boxMesh);
         cameras.push(boxCamera);
+
+        scene.add(boxMesh);
     };
 
     //Global (detached) camera (in last position of cameras)
