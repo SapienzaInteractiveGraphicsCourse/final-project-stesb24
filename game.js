@@ -7,11 +7,13 @@ const boxWidth = 1, boxHeight = 2;
 const bulletRadius = 0.2;
 
 const boxes = [];
+const boxBodies = [];
 const cameras = [];
+
 const bullets = [];
 const bulletBodies = [];
 
-const players = 1;
+const players = 2;
 let currentPlayer = 0;
 
 //Creates new cameras
@@ -37,12 +39,14 @@ function main() {
 
     //Create the boxes and their cameras
     for (let i=0; i < players; i++) {
-        const [boxMesh, boxCamera] = createCharacter(boxWidth, boxHeight, i);
+        const [boxMesh, boxCamera, boxBody] = createCharacter(boxWidth, boxHeight, i);
 
         boxes.push(boxMesh);
+        boxBodies.push(boxBody);
         cameras.push(boxCamera);
 
         scene.add(boxMesh);
+        world.add(boxBody);
     };
 
     //Global (detached) camera (in last position of cameras)
@@ -53,44 +57,67 @@ function main() {
     let camera = cameras[0];        //Start from first player's camera
 
     //Keyboard controls
-    document.addEventListener("keydown", (e) => {
-        console.log("down: " + e.code);
-        const currentBox = boxes[currentPlayer];
-        const boxSpeed = 0.4;
-        const boxAngle = 0.05;
-        
-        switch (e.code) {
-            case "KeyW":            //Move forward
-                currentBox.position.x += -Math.sin(currentBox.rotation.y) * boxSpeed;
-                currentBox.position.z += -Math.cos(currentBox.rotation.y) * boxSpeed;
-                break;
-            case "KeyS":            //Move backwards
-                currentBox.position.x += Math.sin(currentBox.rotation.y) * boxSpeed;
-                currentBox.position.z += Math.cos(currentBox.rotation.y) * boxSpeed;
-                break;
-            case "KeyA":            //Rotate left
-                currentBox.rotation.y += boxAngle;
-                break;
-            case "KeyD":            //Rotate right
-                currentBox.rotation.y += -boxAngle;
-                break;
-            case "KeyE":            //Look from above (global camera)
-                camera = cameras[cameras.length - 1];
-                break;
-            case "Space":           //Shoot and next player's turn
-                bullet();
-                currentPlayer = (currentPlayer + 1) % players;
-                camera = cameras[currentPlayer];
-                break;
+    let waitForCollision = false;
+    document.addEventListener("keydown", commands);     //Normal keyboard handler (disabled after shooting)
+    document.addEventListener("keydown", (e) => {       //You can always look from above (global camera)
+        if (e.code == "KeyE") {
+            camera = cameras[cameras.length - 1];
         }
-    }, false);
-
-    document.addEventListener("keyup", (e) => {
-        console.log("up: " + e.code);       //Stop looking from above
+    });
+    document.addEventListener("keyup", (e) => {         //Stop looking from above
+        console.log("up: " + e.code);
         if (e.code == "KeyE") {
             camera = cameras[currentPlayer];
         }
-    }, false);
+    });
+    
+    function commands(e) {
+        if (!waitForCollision) {        //Move if you didn't shoot; otherwise wait for the bullet to collide
+            const currentBox = boxes[currentPlayer];
+            const currentBoxBody = boxBodies[currentPlayer];
+            const boxSpeed = 0.4;
+            //How much the box moves on x and z and how much it rotates
+            const movementX = Math.sin(currentBox.rotation.y) * boxSpeed;
+            const movementZ = Math.cos(currentBox.rotation.y) * boxSpeed;
+            const boxRotation = 0.05;
+            
+            switch (e.code) {           //Update the physics body accordingly
+                case "KeyW":            //Move forward        
+                    currentBox.position.x += -movementX;
+                    currentBox.position.z += -movementZ;
+                    currentBoxBody.position.x += -movementX;
+                    currentBoxBody.position.z += -movementZ;
+                    break;
+                case "KeyS":            //Move backwards
+                    currentBox.position.x += movementX;
+                    currentBox.position.z += movementZ;
+                    currentBoxBody.position.x += movementX;
+                    currentBoxBody.position.z += movementZ;
+                    break;
+                case "KeyA":            //Rotate left
+                    currentBox.rotation.y += boxRotation;
+                    currentBoxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentBox.rotation.y);
+                    break;
+                case "KeyD":            //Rotate right
+                    currentBox.rotation.y += -boxRotation;
+                    currentBoxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentBox.rotation.y);
+                    break;
+                case "Space":           //Shoot and go to next player's turn
+                    waitForCollision = true;        //Can't move before the collision
+                    const bulletBody = bullet();
+                    bulletBody.addEventListener("collide", nextTurn);       //Detect bullet collision
+                    break;
+            }
+        }
+    }
+
+    //Go to next player's turn
+    function nextTurn(e) {
+        this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
+        currentPlayer = (currentPlayer + 1) % players;
+        camera = cameras[currentPlayer];                //Switch to next player's camera
+        waitForCollision = false;
+    }
 
     //Shoot a new bullet
     function bullet() {
@@ -103,9 +130,10 @@ function main() {
 
         //Bullet initial position
         const currentBox = boxes[currentPlayer];
-        const initialX = currentBox.position.x;
+        const angle = currentBox.rotation.y;
+        const initialX = currentBox.position.x - Math.sin(angle) * 0.75;    //Bullet spawns a bit distant from the box
         const initialY = boxHeight/2;
-        const initialZ = currentBox.position.z;
+        const initialZ = currentBox.position.z - Math.cos(angle) * 0.75;
         bulletMesh.position.set(initialX, initialY, initialZ);
 
         bullets.push(bulletMesh);
@@ -119,12 +147,13 @@ function main() {
         bulletBody.position.set(initialX, initialY, initialZ);
         const horizontalSpeed = 20;
         const verticalSpeed = 5;
-        const angle = currentBox.rotation.y;
         bulletBody.velocity.set(-Math.sin(angle) * horizontalSpeed,
             verticalSpeed, -Math.cos(angle) * horizontalSpeed);
 
         bulletBodies.push(bulletBody);
         world.addBody(bulletBody);
+
+        return bulletBody;          //Used for bullet listener to reveal the first collision
     }
 
     const canvas = document.querySelector("#c");

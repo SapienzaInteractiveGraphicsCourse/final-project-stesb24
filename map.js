@@ -8,6 +8,7 @@ function createMap(scene, world) {
     createBunker(scene, world);
     createBarrels(scene, world);
     createTrees(scene, world);
+    createCollisionPlane(world);
 }
 
 function createLights(scene) {
@@ -36,6 +37,7 @@ function createGround(scene, world) {
     const timesToRepeatVertically = 8;
     texture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
     const groundMaterial = new THREE.MeshPhongMaterial({map: texture});
+    groundMaterial.side = THREE.DoubleSide;
 
     //Ground
     const groundWidth = 50;
@@ -93,7 +95,7 @@ function createBunker(scene, world) {
 }
 
 //Input params: dimensions - texture horizontal repetitions - coordinates - scene and world
-//Take the dimensions of the wall and its coordinates and create it
+//Take the dimensions of the wall and its coordinates and create it;
 //timesToRepeatHorizontally also determines the orientation (angle) of the wall:
 // - 3 repetitions for east and west walls (-> 90°)
 // - 2 repetitions for north wall (-> 0°)
@@ -266,6 +268,17 @@ function createTree(x, z, scene) {
 
     scene.add(trunkMesh);
     scene.add(foliageMesh);
+}
+
+//Invisible plane placed at negative y, used to change turn (bullet collision)
+//when the bullet misses and goes outside of the map
+function createCollisionPlane(world) {
+    const planeShape = new CANNON.Plane();
+    const planeBody = new CANNON.Body({mass: 0});
+    planeBody.addShape(planeShape);
+    planeBody.position.set(0, -20, 0);
+    planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    world.add(planeBody);
 }
 
 export {createMap};
