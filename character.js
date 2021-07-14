@@ -25,11 +25,16 @@ function createCharacter(boxWidth, boxHeight, boxNumber) {
     const initialY = boxHeight / 2;
     boxMesh.position.set(initialX, initialY, 0);
 
-    //Add the camera to the box
-    const boxCamera = makeCamera();
-    boxCamera.position.set(0, boxHeight/2 + 1.5, 3.5);      //Relative to the box
-    boxCamera.lookAt(0, 0, -6.5);
-    boxMesh.add(boxCamera);
+    //Add third person and first person cameras to the box
+    const thirdPersonCamera = makeCamera();
+    thirdPersonCamera.position.set(0, boxHeight/2 + 1.5, 3.5);      //Relative to the box
+    thirdPersonCamera.lookAt(0, 0, -6.5);
+    boxMesh.add(thirdPersonCamera);
+
+    const firstPersonCamera = makeCamera();
+    firstPersonCamera.position.set(0, boxHeight * 0.25, 0);       //Relative to the box
+    firstPersonCamera.lookAt(0, boxHeight * 0.25, -1);
+    boxMesh.add(firstPersonCamera);
 
     //Box physics
     const halfExtents = new CANNON.Vec3(boxWidth / 2, boxHeight / 2, boxWidth / 2);
@@ -38,7 +43,7 @@ function createCharacter(boxWidth, boxHeight, boxNumber) {
     boxBody.addShape(boxShape);
     boxBody.position.set(initialX, initialY, 0);
 
-    return [boxMesh, boxCamera, boxBody];
+    return [boxMesh, boxBody, thirdPersonCamera, firstPersonCamera];
 }
 
 export {createCharacter};

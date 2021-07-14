@@ -8,7 +8,10 @@ const bulletRadius = 0.2;
 
 const boxes = [];
 const boxBodies = [];
-const cameras = [];
+
+const thirdPersonCameras = [];
+const firstPersonCameras = [];
+let globalCamera;
 
 const bullets = [];
 const bulletBodies = [];
@@ -39,40 +42,40 @@ function main() {
 
     //Create the boxes and their cameras
     for (let i=0; i < players; i++) {
-        const [boxMesh, boxCamera, boxBody] = createCharacter(boxWidth, boxHeight, i);
+        const [boxMesh, boxBody, thirdPersonCamera, firstPersonCamera] = createCharacter(boxWidth, boxHeight, i);
 
         boxes.push(boxMesh);
         boxBodies.push(boxBody);
-        cameras.push(boxCamera);
+        thirdPersonCameras.push(thirdPersonCamera);
+        firstPersonCameras.push(firstPersonCamera);
 
         scene.add(boxMesh);
         world.add(boxBody);
     };
 
-    //Global (detached) camera (in last position of cameras)
-    cameras.push(makeCamera(45, 70));
-    cameras[cameras.length - 1].position.set(0, 60, 0);
-    cameras[cameras.length - 1].lookAt(0, 0, 0);
+    //Detached camera from above
+    globalCamera = makeCamera(45, 70);
+    globalCamera.position.set(0, 60, 0);
+    globalCamera.lookAt(0, 0, 0);
 
-    let camera = cameras[0];        //Start from first player's camera
+    let camera = thirdPersonCameras[0];        //Start from first player's camera
 
     //Keyboard controls
     let waitForCollision = false;
     document.addEventListener("keydown", commands);     //Normal keyboard handler (disabled after shooting)
-    document.addEventListener("keydown", (e) => {       //You can always look from above (global camera)
+    document.addEventListener("keydown", (e) => {       //You can always look from above
         if (e.code == "KeyE") {
-            camera = cameras[cameras.length - 1];
+            camera = globalCamera;
         }
     });
-    document.addEventListener("keyup", (e) => {         //Stop looking from above
-        console.log("up: " + e.code);
-        if (e.code == "KeyE") {
-            camera = cameras[currentPlayer];
+    document.addEventListener("keyup", (e) => {         //Stop looking from above or from first person
+        if (e.code == "KeyE" || e.code == "KeyQ") {
+            camera = thirdPersonCameras[currentPlayer];
         }
     });
     
     function commands(e) {
-        if (!waitForCollision) {        //Move if you didn't shoot; otherwise wait for the bullet to collide
+        if (!waitForCollision) {        //Move if you haven't shot yet; otherwise wait for the bullet to collide
             const currentBox = boxes[currentPlayer];
             const currentBoxBody = boxBodies[currentPlayer];
             const boxSpeed = 0.4;
@@ -81,7 +84,7 @@ function main() {
             const movementZ = Math.cos(currentBox.rotation.y) * boxSpeed;
             const boxRotation = 0.05;
             
-            switch (e.code) {           //Update the physics body accordingly
+            switch (e.code) {           //Remember to update the physics body accordingly
                 case "KeyW":            //Move forward        
                     currentBox.position.x += -movementX;
                     currentBox.position.z += -movementZ;
@@ -102,8 +105,11 @@ function main() {
                     currentBox.rotation.y += -boxRotation;
                     currentBoxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentBox.rotation.y);
                     break;
+                case "KeyQ":            //First person
+                    camera = firstPersonCameras[currentPlayer];
+                    break;
                 case "Space":           //Shoot and go to next player's turn
-                    waitForCollision = true;        //Can't move before the collision
+                    waitForCollision = true;            //Can't move before the collision
                     const bulletBody = bullet();
                     bulletBody.addEventListener("collide", nextTurn);       //Detect bullet collision
                     break;
@@ -115,7 +121,7 @@ function main() {
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         currentPlayer = (currentPlayer + 1) % players;
-        camera = cameras[currentPlayer];                //Switch to next player's camera
+        camera = thirdPersonCameras[currentPlayer];                //Switch to next player's camera
         waitForCollision = false;
     }
 
@@ -153,7 +159,7 @@ function main() {
         bulletBodies.push(bulletBody);
         world.addBody(bulletBody);
 
-        return bulletBody;          //Used for bullet listener to reveal the first collision
+        return bulletBody;          //Used for bullet listener to detect the first collision
     }
 
     const canvas = document.querySelector("#c");
@@ -172,10 +178,16 @@ function main() {
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
         if (resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
-            cameras.forEach(camera => {
+            thirdPersonCameras.forEach(camera => {
                 camera.aspect = canvas.clientWidth / canvas.clientHeight;
                 camera.updateProjectionMatrix();
             });
+            firstPersonCameras.forEach(camera => {
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+            });
+            globalCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+            globalCamera.updateProjectionMatrix();
         }
 
         renderer.render(scene, camera);
