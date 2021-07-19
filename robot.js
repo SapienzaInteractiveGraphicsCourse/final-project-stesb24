@@ -54,7 +54,7 @@ const torsoHeight = 1;
 const torsoDepth = 0.45;
 //Head
 const headRadius = 0.35;
-const segments = 10;
+const segments = 15;
 //Legs
 const legWidth = 0.22;
 const legHeight = 0.5;
@@ -66,7 +66,6 @@ const armDepth = armWidth;
 //Cannon
 const cannonRadius = armWidth / 2 + 0.07;
 const cannonHeight = armHeight;
-const radialSegments = 15;
 //Spheres
 const radius = 0.135;
 
@@ -150,6 +149,7 @@ class Robot {
 
         this.leftElbow = new THREE.Mesh(sphereGeometry, material);
         this.leftElbow.position.y = -armHeight / 2;
+        this.leftElbow.rotation.x = Math.PI / 15;
 
         const leftLowerArmGeometry = new THREE.BoxGeometry(armWidth, armHeight, armDepth);
         this.leftLowerArm = new THREE.Mesh(leftLowerArmGeometry, material);
@@ -157,7 +157,7 @@ class Robot {
 
         //Right Arm
         this.rightShoulder = new THREE.Mesh(sphereGeometry, material);
-        this.rightShoulder.position.x = torsoWidth / 2 + armWidth / 2 - 0.05;
+        this.rightShoulder.position.x = torsoWidth / 2 + radius - 0.05;
         this.rightShoulder.position.y = torsoHeight - 0.075;
         this.rightShoulder.rotation.z = Math.PI / 20;
 
@@ -167,8 +167,9 @@ class Robot {
 
         this.rightElbow = new THREE.Mesh(sphereGeometry, material);
         this.rightElbow.position.y = -armHeight / 2;
+        this.rightElbow.rotation.x = Math.PI / 15;
 
-        const rightLowerArmGeometry = new THREE.CylinderGeometry(cannonRadius, cannonRadius, cannonHeight, radialSegments);
+        const rightLowerArmGeometry = new THREE.CylinderGeometry(cannonRadius, cannonRadius, cannonHeight, segments);
         this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, material);
         this.rightLowerArm.position.y = -armHeight / 2;
 

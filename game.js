@@ -1,6 +1,7 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {createCharacter, Robot} from "./robot.js";
+import {idleToAim, aimToIdle} from "./animations.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
 const robotWidth = 1, robotHeight = 2;
@@ -106,11 +107,15 @@ function main() {
                     turnRight = false;
                     const bulletBody = bullet();
                     bulletBody.addEventListener("collide", nextTurn);
+                    aimToIdle(currentRobot);
                 }
                 break;
             //Camera handling
             case "KeyE":                //Global camera
                 if (!global) {          //Switch to global camera
+                    if (firstPerson) {
+                        aimToIdle(currentRobot);
+                    }
                     global = true;
                     firstPerson = false;
                     camera = globalCamera;
@@ -123,11 +128,13 @@ function main() {
                 break;
             case "KeyQ":                //First person camera
                 if (!firstPerson) {     //Switch to first person camera
+                    idleToAim(currentRobot);
                     firstPerson = true;
                     global = false;
                     camera = currentRobot.firstPersonCamera;
                 }
                 else {                  //Switch back to third person camera
+                    aimToIdle(currentRobot);
                     firstPerson = false;
                     global = false;
                     camera = currentRobot.thirdPersonCamera;
@@ -243,6 +250,7 @@ function main() {
 
         //Move the robot
         move();
+        TWEEN.update();
 
         //Copy coordinates from CANNON to THREE for each bullet
         bullets.forEach((bullet, index) => {
