@@ -1,13 +1,13 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
-import {createCharacter} from "./character.js";
+import {createCharacter, createCharacter2} from "./character.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
-const boxWidth = 1, boxHeight = 2;
+const robotWidth = 1, robotHeight = 2;
 const bulletRadius = 0.2;
 
-const boxes = [];
-const boxBodies = [];
+const robots = [];
+const robotBodies = [];
 
 const thirdPersonCameras = [];
 const firstPersonCameras = [];
@@ -17,9 +17,9 @@ const bullets = [];
 const bulletBodies = [];
 
 const numTeams = 2;
-const boxesPerTeam = 2;
-const numBoxes = numTeams * boxesPerTeam;
-let currentBoxNumber = 0;
+const robotsPerTeam = 2;
+const numRobots = numTeams * robotsPerTeam;
+let currentRobotNumber = 0;
 
 //Creates new cameras
 function makeCamera(near = 1, far = 80) {
@@ -42,9 +42,9 @@ function main() {
     //Create all lights and objects
     createMap(scene, world);
 
-    //Create the boxes and their cameras
-    for (let i=0; i < numBoxes; i++) {
-        const [boxMesh, boxBody, thirdPersonCamera, firstPersonCamera] = createCharacter(boxWidth, boxHeight, i);
+    //Create the robots and their cameras
+    for (let i=0; i < numRobots; i++) {
+        /*const [boxMesh, boxBody, thirdPersonCamera, firstPersonCamera] = createCharacter(boxWidth, boxHeight, i);
 
         boxes.push(boxMesh);
         boxBodies.push(boxBody);
@@ -52,7 +52,12 @@ function main() {
         firstPersonCameras.push(firstPersonCamera);
 
         scene.add(boxMesh);
-        world.add(boxBody);
+        world.add(boxBody);*/
+        const [robot, thirdPersonCamera, firstPersonCamera] = createCharacter2(i, scene);
+
+        robots.push(robot);
+        thirdPersonCameras.push(thirdPersonCamera);
+        firstPersonCameras.push(firstPersonCamera);
     };
 
     //Detached camera from above
@@ -115,19 +120,19 @@ function main() {
                 else {                  //Switch back to third person camera
                     global = false;
                     firstPerson = false;
-                    camera = thirdPersonCameras[currentBoxNumber];
+                    camera = thirdPersonCameras[currentRobotNumber];
                 }
                 break;
             case "KeyQ":                //First person camera
                 if (!firstPerson) {     //Switch to first person camera
                     firstPerson = true;
                     global = false;
-                    camera = firstPersonCameras[currentBoxNumber];
+                    camera = firstPersonCameras[currentRobotNumber];
                 }
                 else {                  //Switch back to third person camera
                     firstPerson = false;
                     global = false;
-                    camera = thirdPersonCameras[currentBoxNumber];
+                    camera = thirdPersonCameras[currentRobotNumber];
                 }
                 break;
             
@@ -155,44 +160,44 @@ function main() {
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         setTimeout(() => {                              //Change turn some time after the collision
-            currentBoxNumber = (currentBoxNumber + 1) % numBoxes;
-            camera = thirdPersonCameras[currentBoxNumber];       //Switch to next player's camera
+            currentRobotNumber = (currentRobotNumber + 1) % numRobots;
+            camera = thirdPersonCameras[currentRobotNumber];       //Switch to next player's camera
             global = false;                             //Reset everything
             firstPerson = false;
             waitForCollision = false;
         }, 1500);
     }
 
-    //Move the box and copy the coordinates to its physics body (called at every render)
+    //Move the robot and copy the coordinates to its physics body (called at every render)
     function move() {
-        const currentBox = boxes[currentBoxNumber];
-        const currentBoxBody = boxBodies[currentBoxNumber];
-        const boxSpeed = 0.1;
-        //How much the box moves on x and z and how much it rotates
-        const movementX = Math.sin(currentBox.rotation.y) * boxSpeed;
-        const movementZ = Math.cos(currentBox.rotation.y) * boxSpeed;
-        const boxRotation = 0.015;
+        const currentRobot = robots[currentRobotNumber];
+        const currentRobotBody = robotBodies[currentRobotNumber];
+        const robotSpeed = 0.1;
+        //How much the robot moves on x and z and how much it rotates
+        const movementX = Math.sin(currentRobot.rotation.y) * robotSpeed;
+        const movementZ = Math.cos(currentRobot.rotation.y) * robotSpeed;
+        const robotRotation = 0.015;
 
         //No if-else so that you can use them together
         if (moveForward) {
-            currentBox.position.x += -movementX;
-            currentBox.position.z += -movementZ;
-            currentBoxBody.position.x += -movementX;
-            currentBoxBody.position.z += -movementZ;
+            currentRobot.position.x += -movementX;
+            currentRobot.position.z += -movementZ;
+            //currentRobotBody.position.x += -movementX;
+            //currentRobotBody.position.z += -movementZ;
         }
         if (moveBackward) {
-            currentBox.position.x += movementX;
-            currentBox.position.z += movementZ;
-            currentBoxBody.position.x += movementX;
-            currentBoxBody.position.z += movementZ;
+            currentRobot.position.x += movementX;
+            currentRobot.position.z += movementZ;
+            //currentRobotBody.position.x += movementX;
+            //currentRobotBody.position.z += movementZ;
         }
         if (turnLeft) {
-            currentBox.rotation.y += boxRotation;
-            currentBoxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentBox.rotation.y);
+            currentRobot.rotation.y += robotRotation;
+            //currentRobotBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.rotation.y);
         }
         if (turnRight) {
-            currentBox.rotation.y += -boxRotation;
-            currentBoxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentBox.rotation.y);
+            currentRobot.rotation.y += -robotRotation;
+            //currentRobotBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.rotation.y);
         }
     }
 
@@ -206,11 +211,11 @@ function main() {
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
         //Bullet initial position
-        const currentBox = boxes[currentBoxNumber];
-        const angle = currentBox.rotation.y;
-        const initialX = currentBox.position.x - Math.sin(angle) * 0.75;    //Bullet spawns a bit distant from the box
-        const initialY = boxHeight/2;
-        const initialZ = currentBox.position.z - Math.cos(angle) * 0.75;
+        const currentRobot = robots[currentRobotNumber];
+        const angle = currentRobot.rotation.y;
+        const initialX = currentRobot.position.x - Math.sin(angle) * 0.75;  //Bullet spawns a bit distant from the robot
+        const initialY = robotHeight/2;
+        const initialZ = currentRobot.position.z - Math.cos(angle) * 0.75;
         bulletMesh.position.set(initialX, initialY, initialZ);
 
         bullets.push(bulletMesh);
@@ -240,7 +245,7 @@ function main() {
         //Step the physics world
         world.step(1/60);
 
-        //Move the box
+        //Move the robot
         move();
 
         //Copy coordinates from CANNON to THREE for each bullet
