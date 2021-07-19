@@ -1,25 +1,25 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
-import {createCharacter, createCharacter2} from "./character.js";
+import {createCharacter, Robot} from "./robot.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
 const robotWidth = 1, robotHeight = 2;
 const bulletRadius = 0.2;
 
+const numTeams = 2;
+const robotsPerTeam = 2;
+const numRobots = numTeams * robotsPerTeam;
+
+let currentRobotNumber = 0;
+let currentRobot;
+
 const robots = [];
 const robotBodies = [];
-
-const thirdPersonCameras = [];
-const firstPersonCameras = [];
-let globalCamera;
 
 const bullets = [];
 const bulletBodies = [];
 
-const numTeams = 2;
-const robotsPerTeam = 2;
-const numRobots = numTeams * robotsPerTeam;
-let currentRobotNumber = 0;
+let globalCamera;
 
 //Creates new cameras
 function makeCamera(near = 1, far = 80) {
@@ -53,26 +53,24 @@ function main() {
 
         scene.add(boxMesh);
         world.add(boxBody);*/
-        const [robot, thirdPersonCamera, firstPersonCamera] = createCharacter2(i, scene);
-
-        robots.push(robot);
-        thirdPersonCameras.push(thirdPersonCamera);
-        firstPersonCameras.push(firstPersonCamera);
+        //const [robot, thirdPersonCamera, firstPersonCamera] = createCharacter2(i, scene);
+        robots.push(new Robot(i, scene));
     };
 
-    //Detached camera from above
+    //Detached camera looking from above
     globalCamera = makeCamera(45, 70);
-    globalCamera.position.set(0, 60, 0);
+    globalCamera.position.y = 60;
     globalCamera.lookAt(0, 0, 0);
 
-    let camera = thirdPersonCameras[0];        //Start from first character's camera
+    currentRobot = robots[0];
+    let camera = currentRobot.thirdPersonCamera;        //Start from first character's camera
 
     //Keyboard controls
     let moveForward = false;
     let moveBackward = false;
     let turnLeft = false;
     let turnRight = false;
-    let global = false;                 //True = looking from above
+    let global = false;                 //True = look from above
     let firstPerson = false;            //True = first person camera
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
 
@@ -120,19 +118,19 @@ function main() {
                 else {                  //Switch back to third person camera
                     global = false;
                     firstPerson = false;
-                    camera = thirdPersonCameras[currentRobotNumber];
+                    camera = currentRobot.thirdPersonCamera;
                 }
                 break;
             case "KeyQ":                //First person camera
                 if (!firstPerson) {     //Switch to first person camera
                     firstPerson = true;
                     global = false;
-                    camera = firstPersonCameras[currentRobotNumber];
+                    camera = currentRobot.firstPersonCamera;
                 }
                 else {                  //Switch back to third person camera
                     firstPerson = false;
                     global = false;
-                    camera = thirdPersonCameras[currentRobotNumber];
+                    camera = currentRobot.thirdPersonCamera;
                 }
                 break;
             
@@ -161,7 +159,8 @@ function main() {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         setTimeout(() => {                              //Change turn some time after the collision
             currentRobotNumber = (currentRobotNumber + 1) % numRobots;
-            camera = thirdPersonCameras[currentRobotNumber];       //Switch to next player's camera
+            currentRobot = robots[currentRobotNumber];
+            camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
             global = false;                             //Reset everything
             firstPerson = false;
             waitForCollision = false;
@@ -170,33 +169,32 @@ function main() {
 
     //Move the robot and copy the coordinates to its physics body (called at every render)
     function move() {
-        const currentRobot = robots[currentRobotNumber];
-        const currentRobotBody = robotBodies[currentRobotNumber];
-        const robotSpeed = 0.1;
+        //const currentRobotBody = robotBodies[currentRobotNumber];
+        const speed = 0.1;
         //How much the robot moves on x and z and how much it rotates
-        const movementX = Math.sin(currentRobot.rotation.y) * robotSpeed;
-        const movementZ = Math.cos(currentRobot.rotation.y) * robotSpeed;
-        const robotRotation = 0.015;
+        const movementX = Math.sin(currentRobot.waist.rotation.y) * speed;
+        const movementZ = Math.cos(currentRobot.waist.rotation.y) * speed;
+        const rotation = 0.015;
 
         //No if-else so that you can use them together
         if (moveForward) {
-            currentRobot.position.x += -movementX;
-            currentRobot.position.z += -movementZ;
+            currentRobot.waist.position.x += -movementX;
+            currentRobot.waist.position.z += -movementZ;
             //currentRobotBody.position.x += -movementX;
             //currentRobotBody.position.z += -movementZ;
         }
         if (moveBackward) {
-            currentRobot.position.x += movementX;
-            currentRobot.position.z += movementZ;
+            currentRobot.waist.position.x += movementX;
+            currentRobot.waist.position.z += movementZ;
             //currentRobotBody.position.x += movementX;
             //currentRobotBody.position.z += movementZ;
         }
         if (turnLeft) {
-            currentRobot.rotation.y += robotRotation;
+            currentRobot.waist.rotation.y += rotation;
             //currentRobotBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.rotation.y);
         }
         if (turnRight) {
-            currentRobot.rotation.y += -robotRotation;
+            currentRobot.waist.rotation.y += -rotation;
             //currentRobotBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.rotation.y);
         }
     }
@@ -211,11 +209,10 @@ function main() {
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
         //Bullet initial position
-        const currentRobot = robots[currentRobotNumber];
-        const angle = currentRobot.rotation.y;
-        const initialX = currentRobot.position.x - Math.sin(angle) * 0.75;  //Bullet spawns a bit distant from the robot
+        const angle = currentRobot.waist.rotation.y;
+        const initialX = currentRobot.waist.position.x - Math.sin(angle) * 0.75;  //Bullet spawns a bit distant from the robot
         const initialY = robotHeight/2;
-        const initialZ = currentRobot.position.z - Math.cos(angle) * 0.75;
+        const initialZ = currentRobot.waist.position.z - Math.cos(angle) * 0.75;
         bulletMesh.position.set(initialX, initialY, initialZ);
 
         bullets.push(bulletMesh);
@@ -257,13 +254,11 @@ function main() {
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
         if (resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
-            thirdPersonCameras.forEach(camera => {
-                camera.aspect = canvas.clientWidth / canvas.clientHeight;
-                camera.updateProjectionMatrix();
-            });
-            firstPersonCameras.forEach(camera => {
-                camera.aspect = canvas.clientWidth / canvas.clientHeight;
-                camera.updateProjectionMatrix();
+            robots.forEach(robot => {
+                robot.thirdPersonCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+                robot.firstPersonCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+                robot.thirdPersonCamera.updateProjectionMatrix();
+                robot.firstPersonCamera.updateProjectionMatrix();
             });
             globalCamera.aspect = canvas.clientWidth / canvas.clientHeight;
             globalCamera.updateProjectionMatrix();
