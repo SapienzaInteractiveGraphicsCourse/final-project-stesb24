@@ -170,11 +170,11 @@ function main() {
     //Move the robot and copy the coordinates to its physics body (called at every render)
     function move() {
         //const currentRobotBody = robotBodies[currentRobotNumber];
-        const speed = 0.1;
+        const speed = 0.2;
         //How much the robot moves on x and z and how much it rotates
         const movementX = Math.sin(currentRobot.waist.rotation.y) * speed;
         const movementZ = Math.cos(currentRobot.waist.rotation.y) * speed;
-        const rotation = 0.015;
+        const rotation = 0.03;
 
         //No if-else so that you can use them together
         if (moveForward) {
@@ -202,9 +202,8 @@ function main() {
     //Shoot a new bullet
     function bullet() {
         //Bullet
-        const widthSegments = 10;
-        const heightSegments = 10;
-        const bulletGeometry = new THREE.SphereGeometry(bulletRadius, widthSegments, heightSegments);
+        const segments = 10;
+        const bulletGeometry = new THREE.SphereGeometry(bulletRadius, segments, segments);
         const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
 

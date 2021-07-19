@@ -51,30 +51,31 @@ function createCharacter(boxWidth, boxHeight, boxNumber) {
 //Torso
 const torsoWidth = 0.6;
 const torsoHeight = 1;
-const torsoDepth = 0.5;
+const torsoDepth = 0.45;
 //Head
-const headWidth = 0.55;
-const headHeight = headWidth;
-const headDepth = headWidth;
+const headRadius = 0.35;
+const segments = 10;
 //Legs
-const legWidth = 0.25;
+const legWidth = 0.22;
 const legHeight = 0.5;
-const legDepth = 0.3;
+const legDepth = 0.24;
 //Arms
-const armWidth = 0.2;
+const armWidth = 0.18;
 const armHeight = 0.45;
 const armDepth = armWidth;
 //Cannon
 const cannonRadius = armWidth / 2 + 0.07;
 const cannonHeight = armHeight;
-const radialSegments = 14;
+const radialSegments = 15;
+//Spheres
+const radius = 0.135;
 
 class Robot {
-    //This class contains: health, waist, torsoMesh, headMesh,
-    //leftUpperLegPivot, leftUpperLegMesh, leftLowerLegPivot, leftLowerLegMesh,
-    //rightUpperLegPivot, rightUpperLegMesh, rightLowerLegPivot, rightLowerLegMesh,
-    //leftUpperArmPivot, leftUpperArmMesh, leftLowerArmPivot, leftLowerArmMesh,
-    //rightUpperArmPivot, rightUpperArmMesh, rightLowerArmPivot, leftLowerArmMesh,
+    //This class contains: health, waist, torso, head,
+    //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
+    //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
+    //leftShoulder, leftUpperArm, leftElbow, leftLowerArm,
+    //rightShoulder, rightUpperArm, rightElbow, rightLowerArm,
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene) {
@@ -88,6 +89,8 @@ class Robot {
             material.color.set("blue");
         }
 
+        const sphereGeometry = new THREE.SphereGeometry(radius, segments, segments);
+
         //Waist (container for the whole robot)
         this.waist = new THREE.Object3D();
         const initialX = initialCoordinates[robotNumber][0];
@@ -97,77 +100,77 @@ class Robot {
 
         //Torso
         const torsoGeometry = new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth);
-        this.torsoMesh = new THREE.Mesh(torsoGeometry, material);
-        this.torsoMesh.position.y = torsoHeight / 2;
+        this.torso = new THREE.Mesh(torsoGeometry, material);
+        this.torso.position.y = torsoHeight / 2;
 
         //Head
-        const headGeometry = new THREE.BoxGeometry(headWidth, headHeight, headDepth);
-        this.headMesh = new THREE.Mesh(headGeometry, material);
-        this.headMesh.position.y = torsoHeight + headHeight / 2;
+        const headGeometry = new THREE.SphereGeometry(headRadius, segments, segments);
+        this.head = new THREE.Mesh(headGeometry, material);
+        this.head.position.y = torsoHeight + headRadius - 0.08;
 
         //Left leg
-        this.leftUpperLegPivot = new THREE.Object3D();
-        this.leftUpperLegPivot.position.x = -torsoWidth / 2 + legWidth / 2;
+        this.leftLegPivot = new THREE.Object3D();
+        this.leftLegPivot.position.x = -torsoWidth / 2 + legWidth / 2;
 
         const leftUpperLegGeometry = new THREE.BoxGeometry(legWidth, legHeight, legDepth);
-        this.leftUpperLegMesh = new THREE.Mesh(leftUpperLegGeometry, material);
-        this.leftUpperLegMesh.position.y = -legHeight / 2;
+        this.leftUpperLeg = new THREE.Mesh(leftUpperLegGeometry, material);
+        this.leftUpperLeg.position.y = -legHeight / 2;
 
-        this.leftLowerLegPivot = new THREE.Object3D();
-        this.leftLowerLegPivot.position.y = -legHeight / 2;
+        this.leftKnee = new THREE.Mesh(sphereGeometry, material);
+        this.leftKnee.position.y = -legHeight / 2;
 
         const leftLowerLegGeometry = new THREE.BoxGeometry(legWidth, legHeight, legDepth);
-        this.leftLowerLegMesh = new THREE.Mesh(leftLowerLegGeometry, material);
-        this.leftLowerLegMesh.position.y = -legHeight / 2;
+        this.leftLowerLeg = new THREE.Mesh(leftLowerLegGeometry, material);
+        this.leftLowerLeg.position.y = -legHeight / 2;
 
         //Right leg
-        this.rightUpperLegPivot = new THREE.Object3D();
-        this.rightUpperLegPivot.position.x = torsoWidth / 2 - legWidth / 2;
+        this.rightLegPivot = new THREE.Object3D();
+        this.rightLegPivot.position.x = torsoWidth / 2 - legWidth / 2;
 
         const rightUpperLegGeometry = new THREE.BoxGeometry(legWidth, legHeight, legDepth);
-        this.rightUpperLegMesh = new THREE.Mesh(rightUpperLegGeometry, material);
-        this.rightUpperLegMesh.position.y = -legHeight / 2;
+        this.rightUpperLeg = new THREE.Mesh(rightUpperLegGeometry, material);
+        this.rightUpperLeg.position.y = -legHeight / 2;
 
-        this.rightLowerLegPivot = new THREE.Object3D();
-        this.rightLowerLegPivot.position.y = -legHeight / 2;
+        this.rightKnee = new THREE.Mesh(sphereGeometry, material);
+        this.rightKnee.position.y = -legHeight / 2;
 
         const rightLowerLegGeometry = new THREE.BoxGeometry(legWidth, legHeight, legDepth);
-        this.rightLowerLegMesh = new THREE.Mesh(rightLowerLegGeometry, material);
-        this.rightLowerLegMesh.position.y = -legHeight / 2;
+        this.rightLowerLeg = new THREE.Mesh(rightLowerLegGeometry, material);
+        this.rightLowerLeg.position.y = -legHeight / 2;
 
         //Left arm
-        this.leftUpperArmPivot = new THREE.Object3D();
-        this.leftUpperArmPivot.position.x = -torsoWidth / 2 - armWidth / 2;
-        this.leftUpperArmPivot.position.y = torsoHeight;
+        this.leftShoulder = new THREE.Mesh(sphereGeometry, material);
+        this.leftShoulder.position.x = -torsoWidth / 2 - radius + 0.05;
+        this.leftShoulder.position.y = torsoHeight - 0.075;
+        this.leftShoulder.rotation.z = -Math.PI / 20;
 
         const leftUpperArmGeometry = new THREE.BoxGeometry(armWidth, armHeight, armDepth);
-        this.leftUpperArmMesh = new THREE.Mesh(leftUpperArmGeometry, material);
-        this.leftUpperArmMesh.position.y = -armHeight / 2;
+        this.leftUpperArm = new THREE.Mesh(leftUpperArmGeometry, material);
+        this.leftUpperArm.position.y = -armHeight / 2;
 
-        this.leftLowerArmPivot = new THREE.Object3D();
-        this.leftLowerArmPivot.position.y = -armHeight / 2;
+        this.leftElbow = new THREE.Mesh(sphereGeometry, material);
+        this.leftElbow.position.y = -armHeight / 2;
 
         const leftLowerArmGeometry = new THREE.BoxGeometry(armWidth, armHeight, armDepth);
-        this.leftLowerArmMesh = new THREE.Mesh(leftLowerArmGeometry, material);
-        this.leftLowerArmMesh.position.y = -armHeight / 2;
+        this.leftLowerArm = new THREE.Mesh(leftLowerArmGeometry, material);
+        this.leftLowerArm.position.y = -armHeight / 2;
 
         //Right Arm
-        this.rightUpperArmPivot = new THREE.Object3D();
-        this.rightUpperArmPivot.position.x = torsoWidth / 2 + armWidth / 2;
-        this.rightUpperArmPivot.position.y = torsoHeight - 0.1;
-        this.rightUpperArmPivot.rotation.x = Math.PI / 1.8;
-        this.rightUpperArmPivot.rotation.z = -Math.PI / 13;
+        this.rightShoulder = new THREE.Mesh(sphereGeometry, material);
+        this.rightShoulder.position.x = torsoWidth / 2 + armWidth / 2 - 0.05;
+        this.rightShoulder.position.y = torsoHeight - 0.075;
+        this.rightShoulder.rotation.z = Math.PI / 20;
 
         const rightUpperArmGeometry = new THREE.BoxGeometry(armWidth, armHeight, armDepth);
-        this.rightUpperArmMesh = new THREE.Mesh(rightUpperArmGeometry, material);
-        this.rightUpperArmMesh.position.y = -armHeight / 2;
+        this.rightUpperArm = new THREE.Mesh(rightUpperArmGeometry, material);
+        this.rightUpperArm.position.y = -armHeight / 2;
 
-        this.rightLowerArmPivot = new THREE.Object3D();
-        this.rightLowerArmPivot.position.y = -armHeight / 2;
+        this.rightElbow = new THREE.Mesh(sphereGeometry, material);
+        this.rightElbow.position.y = -armHeight / 2;
 
         const rightLowerArmGeometry = new THREE.CylinderGeometry(cannonRadius, cannonRadius, cannonHeight, radialSegments);
-        this.rightLowerArmMesh = new THREE.Mesh(rightLowerArmGeometry, material);
-        this.rightLowerArmMesh.position.y = -armHeight / 2;
+        this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, material);
+        this.rightLowerArm.position.y = -armHeight / 2;
 
         //Cameras
         this.thirdPersonCamera = makeCamera();
@@ -179,31 +182,31 @@ class Robot {
         this.firstPersonCamera.lookAt(0, 0, -1);
 
         //Build hierarchical model
-        this.waist.add(this.torsoMesh)
-        this.waist.add(this.headMesh);
+        this.waist.add(this.torso)
+        this.waist.add(this.head);
 
-        this.waist.add(this.leftUpperLegPivot);
-        this.leftUpperLegPivot.add(this.leftUpperLegMesh);
-        this.leftUpperLegMesh.add(this.leftLowerLegPivot);
-        this.leftLowerLegPivot.add(this.leftLowerLegMesh);
+        this.waist.add(this.leftLegPivot);
+        this.leftLegPivot.add(this.leftUpperLeg);
+        this.leftUpperLeg.add(this.leftKnee);
+        this.leftKnee.add(this.leftLowerLeg);
 
-        this.waist.add(this.rightUpperLegPivot);
-        this.rightUpperLegPivot.add(this.rightUpperLegMesh);
-        this.rightUpperLegMesh.add(this.rightLowerLegPivot);
-        this.rightLowerLegPivot.add(this.rightLowerLegMesh);
+        this.waist.add(this.rightLegPivot);
+        this.rightLegPivot.add(this.rightUpperLeg);
+        this.rightUpperLeg.add(this.rightKnee);
+        this.rightKnee.add(this.rightLowerLeg);
 
-        this.waist.add(this.leftUpperArmPivot);
-        this.leftUpperArmPivot.add(this.leftUpperArmMesh);
-        this.leftUpperArmMesh.add(this.leftLowerArmPivot);
-        this.leftLowerArmPivot.add(this.leftLowerArmMesh);
+        this.waist.add(this.leftShoulder);
+        this.leftShoulder.add(this.leftUpperArm);
+        this.leftUpperArm.add(this.leftElbow);
+        this.leftElbow.add(this.leftLowerArm);
 
-        this.waist.add(this.rightUpperArmPivot);
-        this.rightUpperArmPivot.add(this.rightUpperArmMesh);
-        this.rightUpperArmMesh.add(this.rightLowerArmPivot);
-        this.rightLowerArmPivot.add(this.rightLowerArmMesh);
+        this.waist.add(this.rightShoulder);
+        this.rightShoulder.add(this.rightUpperArm);
+        this.rightUpperArm.add(this.rightElbow);
+        this.rightElbow.add(this.rightLowerArm);
 
-        this.headMesh.add(this.thirdPersonCamera);
-        this.headMesh.add(this.firstPersonCamera);
+        this.head.add(this.thirdPersonCamera);
+        this.head.add(this.firstPersonCamera);
 
         scene.add(this.waist);
     }
