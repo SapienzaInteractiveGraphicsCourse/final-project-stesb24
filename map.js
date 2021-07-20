@@ -8,7 +8,7 @@ function createMap(scene, world) {
     createBunker(scene, world);
     createBarrels(scene, world);
     createTrees(scene, world);
-    createCollisionPlane(world);
+    createCollisionPlane(scene, world);
 }
 
 function createLights(scene) {
@@ -37,12 +37,10 @@ function createGround(scene, world) {
     const timesToRepeatVertically = 8;
     texture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
     const groundMaterial = new THREE.MeshPhongMaterial({map: texture});
-    groundMaterial.side = THREE.DoubleSide;
 
     //Ground
     const groundWidth = 50;
-    const groundHeight = 50;
-    const groundGeometry = new THREE.PlaneGeometry(groundWidth, groundHeight);    
+    const groundGeometry = new THREE.PlaneGeometry(groundWidth, groundWidth);    
     const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
     groundMesh.rotation.x = -Math.PI / 2;           //Horizontal
     scene.add(groundMesh);
@@ -51,7 +49,7 @@ function createGround(scene, world) {
     //Instead of using an infinite plane, I place a thin box right below
     //the surface, so that objects can fall off the ground
     const below = 0.1;
-    const halfExtents = new CANNON.Vec3(groundWidth / 2, below, groundHeight / 2);
+    const halfExtents = new CANNON.Vec3(groundWidth / 2, below, groundWidth / 2);
     const groundShape = new CANNON.Box(halfExtents);
     const groundBody = new CANNON.Body({mass: 0});          //Static body
     groundBody.addShape(groundShape);
@@ -193,8 +191,8 @@ function createWall(width, height, depth, timesToRepeatHorizontally, x, y, z, sc
 }
 
 function createBarrels(scene, world) {
-    importBarrel(19.5, -5.5, 0, scene, world);
-    importBarrel(-16, 4, 0, scene, world);
+    importBarrel(18.8, -7, 0, scene, world);
+    importBarrel(-16.3, 4, 0, scene, world);
     importBarrel(-15, 2.8, 1, scene, world);
     importBarrel(-14, 7, 0, scene, world);
 }
@@ -217,7 +215,7 @@ function importBarrel(x, z, type, scene, world) {
             }
         });
 
-        object.scale.set(0.03, 0.03, 0.03);     //Scale to appropriate size
+        object.scale.set(0.034, 0.034, 0.034);     //Scale to appropriate size
         object.position.set(x, 0, z);
         scene.add(object);
 
@@ -235,48 +233,63 @@ function importBarrel(x, z, type, scene, world) {
         const boxBody = new CANNON.Body({mass: 0});
         boxBody.addShape(boxShape);
         boxBody.position.set(x, y, z);
-        world.add(boxBody);
+        world.add(boxBody)
     });
 }
 
-function createTrees(scene) {
-    createTree(-9, -18, scene);
-    createTree(-13, -15, scene);
-    createTree(2.5, -3, scene);
-    createTree(7, 15, scene);
+function createTrees(scene, world) {
+    createTree(-9, -18, scene, world);
+    createTree(-15, -15, scene, world);
+    createTree(2.5, -3, scene, world);
+    createTree(7, 15, scene, world);
 }
 
 //Place the tree in the given coordinates
-function createTree(x, z, scene) {
+function createTree(x, z, scene, world) {
     //Trunk
-    const trunkRadius = 0.4;
-    const trunkHeight = 1.5;
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load("./textures/trunk.png");
+    const trunkMaterial = new THREE.MeshPhongMaterial({map: texture});
+
+    const trunkRadius = 0.45;
+    const trunkHeight = 4;
     const trunkRadialSegments = 8;
     const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius, trunkHeight, trunkRadialSegments);
-    const trunkMaterial = new THREE.MeshPhongMaterial({color: "saddleBrown"});
     const trunkMesh = new THREE.Mesh(trunkGeometry, trunkMaterial);
     trunkMesh.position.set(x, trunkHeight / 2, z);
 
-    //Foliage
-    const foliageRadius = 2.2;
-    const foliageHeight = 6;
-    const foliageRadialSegments = 16;
-    const foliageGeometry = new THREE.ConeGeometry(foliageRadius, foliageHeight, foliageRadialSegments);
-    const foliageMaterial = new THREE.MeshPhongMaterial({color: "green"});
-    const foliageMesh = new THREE.Mesh(foliageGeometry, foliageMaterial);
-    foliageMesh.position.set(x, trunkHeight + foliageHeight / 2, z);
+    //Trunk physics
+    const trunkShape = new CANNON.Cylinder(trunkRadius + 0.1, trunkRadius + 0.1, trunkHeight, trunkRadialSegments);
+    const trunkBody = new CANNON.Body({mass: 0});
+    trunkBody.addShape(trunkShape);
+    trunkBody.position.set(x, trunkHeight / 2, z);
+    trunkBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 
+    //Foliage
+    
+
+    //Foliage physics
+    
     scene.add(trunkMesh);
-    scene.add(foliageMesh);
+    world.add(trunkBody);
 }
 
 //Invisible plane placed at negative y, used to change turn (bullet collision)
 //when the bullet misses and goes outside of the map
-function createCollisionPlane(world) {
+function createCollisionPlane(scene, world) {
+    const planeWidth = 200;
+    const position = -8;
+    const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeWidth);
+    const planeMaterial = new THREE.MeshBasicMaterial({color: "skyblue"});    
+    const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+    planeMesh.position.y = position;
+    planeMesh.rotation.x = -Math.PI / 2;           //Horizontal
+    scene.add(planeMesh);
+
     const planeShape = new CANNON.Plane();
     const planeBody = new CANNON.Body({mass: 0});
     planeBody.addShape(planeShape);
-    planeBody.position.set(0, -20, 0);
+    planeBody.position.y = position - 2;
     planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
     world.add(planeBody);
 }
