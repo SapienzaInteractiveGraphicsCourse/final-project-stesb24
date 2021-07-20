@@ -1,6 +1,6 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
-import {createCharacter, Robot} from "./robot.js";
+import {Robot} from "./robot.js";
 import {idleToAim, aimToIdle} from "./animations.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
@@ -165,7 +165,6 @@ function main() {
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         setTimeout(() => {                              //Change turn some time after the collision
-            console.log("co")
             currentRobotNumber = (currentRobotNumber + 1) % numRobots;
             currentRobot = robots[currentRobotNumber];
             camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
