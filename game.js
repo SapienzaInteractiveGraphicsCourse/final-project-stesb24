@@ -23,7 +23,7 @@ const bulletBodies = [];
 let globalCamera;
 
 //Creates new cameras
-function makeCamera(near = 1, far = 80) {
+function makeCamera(near = 1, far = 75) {
     const fov = 50;
     const aspect = 2;       //Canvas default
     return new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -38,33 +38,23 @@ function main() {
     const world = new CANNON.World();
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
-    world.solver.iterations = 5;
+    world.solver.iterations = 10;
 
     //Create all lights and objects
     createMap(scene, world);
 
     //Create the robots and their cameras
     for (let i=0; i < numRobots; i++) {
-        /*const [boxMesh, boxBody, thirdPersonCamera, firstPersonCamera] = createCharacter(boxWidth, boxHeight, i);
-
-        boxes.push(boxMesh);
-        boxBodies.push(boxBody);
-        thirdPersonCameras.push(thirdPersonCamera);
-        firstPersonCameras.push(firstPersonCamera);
-
-        scene.add(boxMesh);
-        world.add(boxBody);*/
-        //const [robot, thirdPersonCamera, firstPersonCamera] = createCharacter2(i, scene);
         robots.push(new Robot(i, scene));
     };
 
     //Detached camera looking from above
-    globalCamera = makeCamera(45, 70);
-    globalCamera.position.y = 60;
+    globalCamera = makeCamera(40, 55);
+    globalCamera.position.y = 50;
     globalCamera.lookAt(0, 0, 0);
 
     currentRobot = robots[0];
-    let camera = currentRobot.thirdPersonCamera;        //Start from first character's camera
+    let camera = currentRobot.thirdPersonCamera;        //Start from first robot's camera
 
     //Keyboard controls
     let moveForward = false;
@@ -243,10 +233,13 @@ function main() {
 
     const canvas = document.querySelector("#c");
     const renderer = new THREE.WebGLRenderer({canvas});
+    
+    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
+        //cannonDebugRenderer.update();
 
         //Move the robot
         move();

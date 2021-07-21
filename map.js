@@ -42,19 +42,19 @@ function createGround(scene, world) {
 
     //Ground
     const groundWidth = 45;
-    const groundGeometry = new THREE.PlaneGeometry(groundWidth, groundWidth);    
+    const groundHeight = 0.1
+    const y = -groundHeight / 2;
+
+    const groundGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundWidth);    
     const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-    groundMesh.rotation.x = -Math.PI / 2;           //Horizontal
+    groundMesh.position.y = y;
 
     //Ground physics
-    //Instead of using an infinite plane, I place a thin box right below
-    //the surface, so that objects can fall off the ground
-    const below = 0.1;
-    const halfExtents = new CANNON.Vec3(groundWidth / 2, below, groundWidth / 2);
+    const halfExtents = new CANNON.Vec3(groundWidth / 2, groundHeight / 2, groundWidth / 2);
     const groundShape = new CANNON.Box(halfExtents);
     const groundBody = new CANNON.Body({mass: 0});          //Static body
     groundBody.addShape(groundShape);
-    groundBody.position.set(0, -below, 0);
+    groundBody.position.y = y;
 
     scene.add(groundMesh);
     world.add(groundBody);
@@ -64,8 +64,8 @@ function createBunker(scene, world) {
     //Define all parameters that are useful to define the building
     const verticalAxis = 13;        //Where to place the bunker on the x axis
     const horizontalAxis = -10;     //Where to place the bunker on the z axis
-    const bunkerWidth = 11;
-    const bunkerDepth = 18;
+    const bunkerWidth = 11;         //Width of north and south walls
+    const bunkerDepth = 18;         //Width of east and west walls
     const bunkerHeight = 4;
     const wallThickness = 0.5;
     const entranceWidth = 2.5;
@@ -85,11 +85,11 @@ function createBunker(scene, world) {
     createBunkerWall(bunkerWidth, bunkerHeight, wallThickness, 2,
         verticalAxis, bunkerHeight/2, horizontalAxis-bunkerDepth/2+wallThickness/2,
         scene, world);
-    //South wall (left)
+    //South wall (west)
     createBunkerWall((bunkerWidth-entranceWidth)/2, bunkerHeight, wallThickness, 0.75,
         verticalAxis-entranceWidth/4-bunkerWidth/4, bunkerHeight/2, horizontalAxis+bunkerDepth/2-wallThickness/2,
         scene, world);
-    //South wall (right)
+    //South wall (east)
     createBunkerWall((bunkerWidth-entranceWidth)/2, bunkerHeight, wallThickness, 0.75,
         verticalAxis+entranceWidth/4+bunkerWidth/4, bunkerHeight/2, horizontalAxis+bunkerDepth/2-wallThickness/2,
         scene, world);
@@ -176,8 +176,9 @@ function createBunkerWall(width, height, depth, timesToRepeatHorizontally, x, y,
     ];
     const wallMesh = new THREE.Mesh(wallGeometry, wallMaterials);
     wallMesh.position.set(x, y, z);
+    const rotation = Math.PI / 2;
     if (timesToRepeatHorizontally == 3) {       //East and west faces
-        wallMesh.rotation.y = Math.PI / 2;
+        wallMesh.rotation.y = rotation;
     }
 
     //Box physics
@@ -187,13 +188,14 @@ function createBunkerWall(width, height, depth, timesToRepeatHorizontally, x, y,
     wallBody.addShape(wallShape);
     wallBody.position.set(x, y, z);
     if (timesToRepeatHorizontally == 3) {       //East and west faces
-        wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+        wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
     }
 
     scene.add(wallMesh);
     world.add(wallBody);
 }
 
+//Similar to the function above
 function createWhiteWall(scene, world) {
     const loader = new THREE.TextureLoader();
 
@@ -205,7 +207,7 @@ function createWhiteWall(scene, world) {
     const textureFront = loader.load("./textures/wall_color.png");
     const textureBack = loader.load("./textures/wall_color.png");
 
-    //Repetitions are needed only horizontally - right and left faces need no repetitions
+    //Repetitions (only part of the texture is needed vertically)
     textureTop.wrapS = THREE.RepeatWrapping;
     textureBottom.wrapS = THREE.RepeatWrapping;
     textureFront.wrapS = THREE.RepeatWrapping;
@@ -231,6 +233,8 @@ function createWhiteWall(scene, world) {
     normalBottom.wrapS = THREE.RepeatWrapping;
     normalFront.wrapS = THREE.RepeatWrapping;
     normalBack.wrapS = THREE.RepeatWrapping;
+    textureRight.repeat.set(1, timesToRepeatVertically);
+    textureLeft.repeat.set(1, timesToRepeatVertically);
     normalTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
     normalBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
     normalFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
@@ -242,11 +246,11 @@ function createWhiteWall(scene, world) {
     const depth = 0.45;
     const x = -5;
     const y = height / 2;
-    const z = 13;
-    const angle = -Math.PI / 10;
+    const z = 15;
+    const angle = -Math.PI / 14;
 
     const wallGeometry = new THREE.BoxGeometry(width, height, depth);
-    const wallMaterials = [                  //Color + texture + normal map for each face
+    const wallMaterials = [                  //Texture + normal map for each face
         new THREE.MeshPhongMaterial({
             map: textureRight,
             normalMap: normalRight
@@ -289,17 +293,21 @@ function createWhiteWall(scene, world) {
 }
 
 function createTurret(scene, world) {
+    //Color, normal and roughness maps
     const loader = new THREE.TextureLoader();
     const colorTexture = loader.load("./textures/stone_wall_color.png");
     const normalTexture = loader.load("./textures/stone_wall_normal.png");
     const roughnessTexture = loader.load("./textures/stone_wall_roughness.png");
 
+    //Repetitions
     colorTexture.wrapS = THREE.RepeatWrapping;
     normalTexture.wrapS = THREE.RepeatWrapping;
     roughnessTexture.wrapS = THREE.RepeatWrapping;
-    colorTexture.repeat.set(2, 1);
-    normalTexture.repeat.set(2, 1);
-    roughnessTexture.repeat.set(2, 1);
+    const timesToRepeatHorizontally = 2;
+    const timesToRepeatVertically = 1;
+    colorTexture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    normalTexture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    roughnessTexture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
 
     const turretMaterials = [
         new THREE.MeshStandardMaterial({
@@ -311,18 +319,23 @@ function createTurret(scene, world) {
         new THREE.MeshPhongMaterial({color: "gray"})
     ];
 
+    //Cylinder
     const turretRadius = 1.5;
     const turretHeight = 3;
-    const turretRadialSegments = 18;
+    const turretRadialSegments = 20;
+    const x = 0;
+    const y = turretHeight / 2;
+    const z = -9;
+
     const turretGeometry = new THREE.CylinderGeometry(turretRadius, turretRadius, turretHeight, turretRadialSegments);
     const turretMesh = new THREE.Mesh(turretGeometry, turretMaterials);
-    turretMesh.position.set(2.5, turretHeight / 2, -9);
+    turretMesh.position.set(x, y, z);
 
     //Turret physics
-    const turretShape = new CANNON.Cylinder(turretRadius + 0.2, turretRadius + 0.2, turretHeight, turretRadialSegments);
+    const turretShape = new CANNON.Cylinder(turretRadius, turretRadius, turretHeight, turretRadialSegments);
     const turretBody = new CANNON.Body({mass: 0});
     turretBody.addShape(turretShape);
-    turretBody.position.set(2.5, turretHeight / 2, -9);
+    turretBody.position.set(x, y, z);
     turretBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 
     scene.add(turretMesh);
@@ -357,23 +370,23 @@ function importBarrel(x, z, rotation, type, scene, world) {
 
         object.scale.set(0.034, 0.034, 0.034);     //Scale to appropriate size
         object.position.set(x, 0, z);
-        object.rotation.y = rotation;
 
         //Get barrel dimensions and coordinates to create its body for physics
         const boundingBox = new THREE.Box3().setFromObject(object);     //Model's bounding box
         const boxSize = boundingBox.getSize(new THREE.Vector3());       //Bounding box dimensions
-        const width = boxSize.x;
+        const radius = boxSize.x / 2;
         const height = boxSize.y;
-        const depth = boxSize.z;
         const y = boundingBox.getCenter(new THREE.Vector3()).y;         //Bouding box y coordinate
+        const radialSegments = 12;
 
-        //Barrel physics (using a box shape looks more real than a cylinder when building from a bounding box)
-        const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
-        const boxShape = new CANNON.Box(halfExtents);
+        //Barrel physics (cylindric body)
+        const boxShape = new CANNON.Cylinder(radius, radius, height, radialSegments);
         const boxBody = new CANNON.Body({mass: 0});
         boxBody.addShape(boxShape);
         boxBody.position.set(x, y, z);
+        boxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 
+        object.rotation.y = rotation;
         scene.add(object);
         world.add(boxBody)
     });
@@ -394,15 +407,15 @@ function createTree(x, z, scene, world) {
     const trunkMaterial = new THREE.MeshPhongMaterial({map: texture});
 
     const trunkRadius = 0.45;
-    const trunkHeight = 4;
-    const trunkRadialSegments = 8;
+    const trunkHeight = 5.5;
+    const trunkRadialSegments = 10;
     const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius, trunkHeight, trunkRadialSegments);
     const trunkMesh = new THREE.Mesh(trunkGeometry, trunkMaterial);
     const y = trunkHeight / 2;
     trunkMesh.position.set(x, y, z);
 
-    //Trunk physics (little adjustments added to make it more realistic)
-    const trunkShape = new CANNON.Cylinder(trunkRadius + 0.1, trunkRadius + 0.1, trunkHeight, trunkRadialSegments);
+    //Trunk physics
+    const trunkShape = new CANNON.Cylinder(trunkRadius, trunkRadius, trunkHeight, trunkRadialSegments);
     const trunkBody = new CANNON.Body({mass: 0});
     trunkBody.addShape(trunkShape);
     trunkBody.position.set(x, y, z);
@@ -414,29 +427,31 @@ function createTree(x, z, scene, world) {
     const foliageGeometry = new THREE.TetrahedronGeometry(foliageRadius, detail);
     const foliageMaterial = new THREE.MeshPhongMaterial({color: "green"});
     const foliageMesh = new THREE.Mesh(foliageGeometry, foliageMaterial);
-    foliageMesh.position.set(x, trunkHeight + foliageRadius - 0.5, z);
+    foliageMesh.position.set(x, trunkHeight + foliageRadius - 2, z);
     
     scene.add(trunkMesh);
     scene.add(foliageMesh);
     world.add(trunkBody);
 }
 
-//Invisible plane placed at negative y, used to change turn (bullet collision)
-//when the bullet misses and goes outside of the map
+//Invisible planes placed at negative y for bullets
+//that miss and go outside of the map
 function createBottomPlanes(scene, world) {
+    //Plane that hides the bullets falling off the map
     const planeWidth = 200;
-    const position = -8;
+    const y = -8;
     const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeWidth);
     const planeMaterial = new THREE.MeshBasicMaterial({color: "skyblue"});    
     const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-    planeMesh.position.y = position;
+    planeMesh.position.y = y;
     planeMesh.rotation.x = -Math.PI / 2;           //Horizontal
     scene.add(planeMesh);
 
+    //CANNON plane to detect collisions for bullets which didn't hit anything on the map
     const planeShape = new CANNON.Plane();
     const planeBody = new CANNON.Body({mass: 0});
     planeBody.addShape(planeShape);
-    planeBody.position.y = position - 2;
+    planeBody.position.y = y - 2;
     planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
     world.add(planeBody);
 }
