@@ -212,6 +212,8 @@ function main() {
         currentRobot.rightShoulder.getWorldPosition(shoulderCoords);
         const initialY = shoulderCoords.y;
         bulletMesh.position.set(initialX, initialY, initialZ);
+        bulletMesh.castShadow = true;
+        bulletMesh.receiveShadow = true;
 
         bullets.push(bulletMesh);
         scene.add(bulletMesh);
@@ -235,6 +237,7 @@ function main() {
 
     const canvas = document.querySelector("#c");
     const renderer = new THREE.WebGLRenderer({canvas});
+    renderer.shadowMap.enabled = true;
     
     //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 

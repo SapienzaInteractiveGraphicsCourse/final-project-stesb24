@@ -16,10 +16,21 @@ function createMap(scene, world) {
 function createLights(scene) {
     //Directional light (sun)
     const lightColor = "white";
-    const intensityDir = 0.8;
+    const intensityDir = 1.1;
     const directionalLight = new THREE.DirectionalLight(lightColor, intensityDir);
-    directionalLight.position.set(-6, 4, -5);
+    directionalLight.position.set(-20, 30, -1.5);
     directionalLight.target.position.set(0, 0, 0);
+
+    //Shadow camera
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.near = 12;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.bottom = -20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.left = -27;
+    directionalLight.shadow.camera.right = 27;
+    directionalLight.shadow.mapSize.width = 4096;
+    directionalLight.shadow.mapSize.width = 4096;
 
     //Ambient light
     const intensityAmb = 0.45;
@@ -48,6 +59,7 @@ function createGround(scene, world) {
     const groundGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundWidth);    
     const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
     groundMesh.position.y = y;
+    groundMesh.receiveShadow = true;
 
     //Ground physics
     const halfExtents = new CANNON.Vec3(groundWidth / 2, groundHeight / 2, groundWidth / 2);
@@ -180,6 +192,8 @@ function createBunkerWall(width, height, depth, timesToRepeatHorizontally, x, y,
     if (timesToRepeatHorizontally == 3) {       //East and west faces
         wallMesh.rotation.y = rotation;
     }
+    wallMesh.castShadow = true;
+    wallMesh.receiveShadow = true;
 
     //Box physics
     const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
@@ -279,6 +293,8 @@ function createWhiteWall(scene, world) {
     const wallMesh = new THREE.Mesh(wallGeometry, wallMaterials);
     wallMesh.position.set(x, y, z);
     wallMesh.rotation.y = angle;
+    wallMesh.castShadow = true;
+    wallMesh.receiveShadow = true;
 
     //Box physics
     const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
@@ -330,6 +346,8 @@ function createTurret(scene, world) {
     const turretGeometry = new THREE.CylinderGeometry(turretRadius, turretRadius, turretHeight, turretRadialSegments);
     const turretMesh = new THREE.Mesh(turretGeometry, turretMaterials);
     turretMesh.position.set(x, y, z);
+    turretMesh.castShadow = true;
+    turretMesh.receiveShadow = true;
 
     //Turret physics
     const turretShape = new CANNON.Cylinder(turretRadius, turretRadius, turretHeight, turretRadialSegments);
@@ -365,6 +383,8 @@ function importBarrel(x, z, rotation, type, scene, world) {
         object.traverse((node) => {       //Need to traverse the object (it's a simple one in this case)
             if (node.isMesh) {
                 node.material = material;
+                node.castShadow = true;
+                node.receiveShadow = true;
             }
         });
 
@@ -413,6 +433,8 @@ function createTree(x, z, scene, world) {
     const trunkMesh = new THREE.Mesh(trunkGeometry, trunkMaterial);
     const y = trunkHeight / 2;
     trunkMesh.position.set(x, y, z);
+    trunkMesh.castShadow = true;
+    trunkMesh.receiveShadow = true;
 
     //Trunk physics
     const trunkShape = new CANNON.Cylinder(trunkRadius, trunkRadius, trunkHeight, trunkRadialSegments);
@@ -428,6 +450,8 @@ function createTree(x, z, scene, world) {
     const foliageMaterial = new THREE.MeshPhongMaterial({color: "green"});
     const foliageMesh = new THREE.Mesh(foliageGeometry, foliageMaterial);
     foliageMesh.position.set(x, trunkHeight + foliageRadius - 2, z);
+    foliageMesh.castShadow = true;
+    foliageMesh.receiveShadow = true;
     
     scene.add(trunkMesh);
     scene.add(foliageMesh);

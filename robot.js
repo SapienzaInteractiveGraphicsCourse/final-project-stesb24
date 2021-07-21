@@ -3,7 +3,7 @@ import {makeCamera} from "./game.js";
 
 //i-th value is the initial (x, z) position and angle of the i-th robot
 const initialCoordinates = [
-    [-1, 3, -Math.PI/2], [12, 15, Math.PI/8], [-17, -17, -0.75*Math.PI], [-4, 17, 0],
+    [0, 3, -Math.PI/2], [12, 15, Math.PI/12], [-17, -17, -0.75*Math.PI], [-4, 17, 0],
     [16.5, -11.5, Math.PI], [2, -9, Math.PI], [-17, 3.5, -Math.PI/2], [12.5, -18.5, Math.PI/2]
 ];
 
@@ -179,6 +179,14 @@ class Robot {
 
         this.head.add(this.thirdPersonCamera);
         this.head.add(this.firstPersonCamera);
+
+        //Shadows
+        this.waist.traverse((node) => {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
 
         scene.add(this.waist);
     }
