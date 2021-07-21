@@ -8,7 +8,7 @@ const robotWidth = 1, robotHeight = 2;
 const bulletRadius = 0.2;
 
 const numTeams = 2;
-const robotsPerTeam = 2;
+const robotsPerTeam = 4;
 const numRobots = numTeams * robotsPerTeam;
 
 let currentRobotNumber = 0;
@@ -199,7 +199,7 @@ function main() {
     //Shoot a new bullet
     function bullet() {
         //Bullet
-        const segments = 10;
+        const segments = 8;
         const bulletGeometry = new THREE.SphereGeometry(bulletRadius, segments, segments);
         const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
@@ -207,8 +207,10 @@ function main() {
         //Bullet initial position
         const angle = currentRobot.waist.rotation.y;
         const initialX = currentRobot.waist.position.x - Math.sin(angle) * 0.75;  //Bullet spawns a bit distant from the robot
-        const initialY = robotHeight/2;
         const initialZ = currentRobot.waist.position.z - Math.cos(angle) * 0.75;
+        let shoulderCoords = new THREE.Vector3();
+        currentRobot.rightShoulder.getWorldPosition(shoulderCoords);
+        const initialY = shoulderCoords.y;
         bulletMesh.position.set(initialX, initialY, initialZ);
 
         bullets.push(bulletMesh);

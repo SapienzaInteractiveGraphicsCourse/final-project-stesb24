@@ -1,9 +1,10 @@
 import * as THREE from "./libs/three.module.js";
 import {makeCamera} from "./game.js";
 
-//i-th value is the initial (x, z) position of the i-th robot
+//i-th value is the initial (x, z) position and angle of the i-th robot
 const initialCoordinates = [
-    [-14, -20], [15, -10], [13, 10], [-5, 0]
+    [-1, 3, -Math.PI/2], [12, 15, Math.PI/8], [-17, -17, -0.75*Math.PI], [-4, 17, 0],
+    [16.5, -11.5, Math.PI], [2, -9, Math.PI], [-17, 3.5, -Math.PI/2], [12.5, -18.5, Math.PI/2]
 ];
 
 /*function createCharacter(boxWidth, boxHeight, boxNumber) {
@@ -66,9 +67,13 @@ class Robot {
         //Waist ("container" for the whole robot)
         this.waist = new THREE.Object3D();
         const initialX = initialCoordinates[robotNumber][0];
-        const initialY = 2 * legHeight;
+        let initialY = 2 * legHeight;
+        if (robotNumber == 5) {
+            initialY += 3;
+        }
         const initialZ = initialCoordinates[robotNumber][1];
         this.waist.position.set(initialX, initialY, initialZ);
+        this.waist.rotation.y = initialCoordinates[robotNumber][2];
 
         //Torso
         const torsoGeometry = new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth);

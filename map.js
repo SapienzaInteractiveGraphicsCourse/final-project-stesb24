@@ -63,7 +63,7 @@ function createGround(scene, world) {
 function createBunker(scene, world) {
     //Define all parameters that are useful to define the building
     const verticalAxis = 13;        //Where to place the bunker on the x axis
-    const horizontalAxis = -10;     //Where to place the bunker on the z axis
+    const horizontalAxis = -8.5;     //Where to place the bunker on the z axis
     const bunkerWidth = 11;         //Width of north and south walls
     const bunkerDepth = 18;         //Width of east and west walls
     const bunkerHeight = 4;
@@ -315,15 +315,15 @@ function createTurret(scene, world) {
             normalMap: normalTexture,
             roughnessMap: roughnessTexture
         }),
-        new THREE.MeshPhongMaterial({color: "gray"}),
-        new THREE.MeshPhongMaterial({color: "gray"})
+        new THREE.MeshPhongMaterial({color: "#737373"}),
+        new THREE.MeshPhongMaterial({color: "#737373"})
     ];
 
     //Cylinder
     const turretRadius = 1.5;
     const turretHeight = 3;
     const turretRadialSegments = 20;
-    const x = 0;
+    const x = 2;
     const y = turretHeight / 2;
     const z = -9;
 
@@ -395,7 +395,7 @@ function importBarrel(x, z, rotation, type, scene, world) {
 function createTrees(scene, world) {
     createTree(-9, -15, scene, world);
     createTree(-15, -12, scene, world);
-    createTree(-4, -2, scene, world);
+    createTree(-2, 2, scene, world);
     createTree(9, 12, scene, world);
 }
 
