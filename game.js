@@ -271,34 +271,34 @@ function main() {
         const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
         //Bullet initial position
-        const angle = currentRobot.waist.rotation.y;
-        const initialX = currentRobot.waist.position.x - Math.sin(angle) * 0.75;  //Bullet spawns a bit distant from the robot
-        const initialZ = currentRobot.waist.position.z - Math.cos(angle) * 0.75;
-        let shoulderCoords = new THREE.Vector3();
-        currentRobot.rightShoulder.getWorldPosition(shoulderCoords);
-        const initialY = shoulderCoords.y;
-        bulletMesh.position.set(initialX, initialY, initialZ);
+        let initialCoords = new THREE.Vector3();
+        currentRobot.rightHand.getWorldPosition(initialCoords);     //Hand gives the bullet's initial coordinates
+        const horizontalAngle = currentRobot.waist.rotation.y;
+        const verticalAngle = currentRobot.head.rotation.x;
+        bulletMesh.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
         bulletMesh.castShadow = true;
         bulletMesh.receiveShadow = true;
-
-        bullets.push(bulletMesh);
-        scene.add(bulletMesh);
 
         //Bullet physics
         const bulletShape = new CANNON.Sphere(bulletRadius);
         const bulletBody = new CANNON.Body({mass: 1});
         bulletBody.addShape(bulletShape);
 
-        bulletBody.position.set(initialX, initialY, initialZ);
-        const horizontalSpeed = 20;
-        const verticalSpeed = 5;
-        bulletBody.velocity.set(-Math.sin(angle) * horizontalSpeed,
-            verticalSpeed, -Math.cos(angle) * horizontalSpeed);
+        //Break the vector over the three axes
+        const power = 10;
+        const projection = power * Math.cos(verticalAngle);     //Project the vector on the xz plane
+        const powerY = power * Math.sin(verticalAngle);
+        const powerX = projection * -Math.sin(horizontalAngle);
+        const powerZ = projection * -Math.cos(horizontalAngle);
+        bulletBody.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
+        bulletBody.velocity.set(powerX, powerY, powerZ);
 
+        bullets.push(bulletMesh);
+        scene.add(bulletMesh);
         bulletBodies.push(bulletBody);
         world.addBody(bulletBody);
 
-        return bulletBody;          //Used for bullet listener to detect the first collision
+        return bulletBody;          //Used for bullet listener to detect the first collision*/
     }
 
     const canvas = document.querySelector("#c");

@@ -45,7 +45,7 @@ class Robot {
     //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
     //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
     //leftShoulder, leftUpperArm, leftElbow, leftLowerArm,
-    //rightShoulder, rightUpperArm, rightElbow, rightLowerArm,
+    //rightShoulder, rightUpperArm, rightElbow, rightLowerArm, rightHand,
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene) {
@@ -139,7 +139,10 @@ class Robot {
         this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, material);
         this.rightLowerArm.position.y = -armHeight / 2;
 
-        //Head (torso's child)
+        this.rightHand = new THREE.Object3D()           //This is used to know where the bullet is shot from
+        this.rightHand.position.y = -armHeight / 2 - 0.22;
+
+        //Head (waist's child)
         const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
         this.head = new THREE.Mesh(headGeometry, material);
         this.head.position.y = torsoHeight + headRadius - 0.1;
@@ -177,6 +180,7 @@ class Robot {
         this.rightShoulder.add(this.rightUpperArm);
         this.rightUpperArm.add(this.rightElbow);
         this.rightElbow.add(this.rightLowerArm);
+        this.rightLowerArm.add(this.rightHand);
 
         this.waist.add(this.head);
 

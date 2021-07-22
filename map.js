@@ -16,7 +16,7 @@ function createMap(scene, world) {
 function createLights(scene) {
     //Directional light (sun)
     const lightColor = "white";
-    const intensityDir = 1.1;
+    const intensityDir = 1;
     const directionalLight = new THREE.DirectionalLight(lightColor, intensityDir);
     directionalLight.position.set(-20, 30, -1.5);
     directionalLight.target.position.set(0, 0, 0);
@@ -33,7 +33,7 @@ function createLights(scene) {
     directionalLight.shadow.mapSize.width = 5120;
 
     //Ambient light
-    const intensityAmb = 0.45;
+    const intensityAmb = 0.6;
     const ambientLight = new THREE.AmbientLight(lightColor, intensityAmb);
 
     scene.add(directionalLight);
