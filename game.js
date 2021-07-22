@@ -67,6 +67,7 @@ function main() {
     let global = false;                 //True = look from above
     let firstPerson = false;            //True = first person camera
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
+    let charging = false;               //True = charging the shot
 
     document.addEventListener("keydown", (e) => {
         switch (e.code) {
@@ -114,9 +115,8 @@ function main() {
                     aimUp = false;
                     aimDown = false;
 
-                    const bulletBody = bullet();
-                    bulletBody.addEventListener("collide", nextTurn);
-                    shoot(currentRobot)
+                    charging = true;
+                    chargeShot();
                 }
                 break;
             //Camera handling
@@ -191,8 +191,66 @@ function main() {
             case "KeyD":
                 turnRight = false;
                 break;
+            case "Space":
+                charging = false;
+                break;
         }
     });
+
+    function chargeShot() {
+        let power = 0;
+        let interval = setInterval(() => {
+            power += 0.1;
+            console.log(power);
+            if (!charging) {
+                clearInterval(interval);
+
+                const bulletBody = bullet(power);
+                bulletBody.addEventListener("collide", nextTurn);
+                shoot(currentRobot)
+            }
+        }, 14);
+    }
+
+    //Shoot a new bullet
+    function bullet(power) {
+        //Bullet
+        const bulletRadius = 0.2;
+        const segments = 8;
+        const bulletGeometry = new THREE.SphereGeometry(bulletRadius, segments, segments);
+        const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
+        const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
+
+        //Bullet initial position
+        let initialCoords = new THREE.Vector3();
+        currentRobot.rightHand.getWorldPosition(initialCoords);     //Hand gives the bullet's initial coordinates
+        const horizontalAngle = currentRobot.waist.rotation.y;
+        const verticalAngle = currentRobot.head.rotation.x;
+        bulletMesh.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
+        bulletMesh.castShadow = true;
+        bulletMesh.receiveShadow = true;
+
+        //Bullet physics
+        const bulletShape = new CANNON.Sphere(bulletRadius);
+        const bulletBody = new CANNON.Body({mass: 1});
+        bulletBody.addShape(bulletShape);
+
+        //Break the vector over the three axes
+        const effectivePower = power * 1.85;
+        const projection = effectivePower * Math.cos(verticalAngle);     //Project the vector on the xz plane
+        const powerY = effectivePower * Math.sin(verticalAngle);
+        const powerX = projection * -Math.sin(horizontalAngle);
+        const powerZ = projection * -Math.cos(horizontalAngle);
+        bulletBody.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
+        bulletBody.velocity.set(powerX, powerY, powerZ);
+
+        bullets.push(bulletMesh);
+        scene.add(bulletMesh);
+        bulletBodies.push(bulletBody);
+        world.addBody(bulletBody);
+
+        return bulletBody;          //Used for bullet listener to detect the first collision*/
+    }
 
     //Go to next player's turn
     function nextTurn(e) {
@@ -243,15 +301,19 @@ function main() {
 
     //Aim when in first person
     function aim() {
-        const rotation = 0.007;
+        const rotation = 0.005;
 
         if (aimUp) {
-            currentRobot.head.rotation.x += rotation;
-            currentRobot.rightShoulder.rotation.x += rotation;
+            if (currentRobot.head.rotation.x < Math.PI / 2) {
+                currentRobot.head.rotation.x += rotation;
+                currentRobot.rightShoulder.rotation.x += rotation;
+            }
         }
         if (aimDown) {
-            currentRobot.head.rotation.x += -rotation;
-            currentRobot.rightShoulder.rotation.x += -rotation;
+            if (currentRobot.head.rotation.x > -Math.PI / 6) {
+                currentRobot.head.rotation.x += -rotation;
+                currentRobot.rightShoulder.rotation.x += -rotation;
+            }
         }
         if (turnLeft) {
             currentRobot.waist.rotation.y += rotation;
@@ -259,46 +321,6 @@ function main() {
         if (turnRight) {
             currentRobot.waist.rotation.y += -rotation;
         }
-    }
-
-    //Shoot a new bullet
-    function bullet() {
-        //Bullet
-        const bulletRadius = 0.2;
-        const segments = 8;
-        const bulletGeometry = new THREE.SphereGeometry(bulletRadius, segments, segments);
-        const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
-        const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
-
-        //Bullet initial position
-        let initialCoords = new THREE.Vector3();
-        currentRobot.rightHand.getWorldPosition(initialCoords);     //Hand gives the bullet's initial coordinates
-        const horizontalAngle = currentRobot.waist.rotation.y;
-        const verticalAngle = currentRobot.head.rotation.x;
-        bulletMesh.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
-        bulletMesh.castShadow = true;
-        bulletMesh.receiveShadow = true;
-
-        //Bullet physics
-        const bulletShape = new CANNON.Sphere(bulletRadius);
-        const bulletBody = new CANNON.Body({mass: 1});
-        bulletBody.addShape(bulletShape);
-
-        //Break the vector over the three axes
-        const power = 10;
-        const projection = power * Math.cos(verticalAngle);     //Project the vector on the xz plane
-        const powerY = power * Math.sin(verticalAngle);
-        const powerX = projection * -Math.sin(horizontalAngle);
-        const powerZ = projection * -Math.cos(horizontalAngle);
-        bulletBody.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
-        bulletBody.velocity.set(powerX, powerY, powerZ);
-
-        bullets.push(bulletMesh);
-        scene.add(bulletMesh);
-        bulletBodies.push(bulletBody);
-        world.addBody(bulletBody);
-
-        return bulletBody;          //Used for bullet listener to detect the first collision*/
     }
 
     const canvas = document.querySelector("#c");
