@@ -114,7 +114,7 @@ class Robot {
         //Left arm
         this.leftShoulder = new THREE.Mesh(sphereGeometry, material);
         this.leftShoulder.position.x = -torsoWidth / 2 - sphereRadius + 0.05;
-        this.leftShoulder.position.y = torsoHeight - 0.075;
+        this.leftShoulder.position.y = torsoHeight / 2 - 0.075;
         this.leftShoulder.rotation.z = -Math.PI / 20;
 
         this.leftUpperArm = new THREE.Mesh(armGeometry, material);
@@ -130,7 +130,7 @@ class Robot {
         //Right Arm
         this.rightShoulder = new THREE.Mesh(sphereGeometry, material);
         this.rightShoulder.position.x = torsoWidth / 2 + sphereRadius - 0.05;
-        this.rightShoulder.position.y = torsoHeight - 0.075;
+        this.rightShoulder.position.y = torsoHeight / 2 - 0.075;
         this.rightShoulder.rotation.z = Math.PI / 20;
 
         this.rightUpperArm = new THREE.Mesh(armGeometry, material);
@@ -149,7 +149,7 @@ class Robot {
         this.thirdPersonCamera.position.set(0, 1.5, 5.5);
         this.thirdPersonCamera.lookAt(0, 0, -2.5);
 
-        this.firstPersonCamera = makeCamera(0.3);
+        this.firstPersonCamera = makeCamera(0.15);
         this.firstPersonCamera.position.set(0, 0, 0);
         this.firstPersonCamera.lookAt(0, 0, -1);
 
@@ -167,12 +167,12 @@ class Robot {
         this.rightUpperLeg.add(this.rightKnee);
         this.rightKnee.add(this.rightLowerLeg);
 
-        this.waist.add(this.leftShoulder);
+        this.torso.add(this.leftShoulder);
         this.leftShoulder.add(this.leftUpperArm);
         this.leftUpperArm.add(this.leftElbow);
         this.leftElbow.add(this.leftLowerArm);
 
-        this.waist.add(this.rightShoulder);
+        this.torso.add(this.rightShoulder);
         this.rightShoulder.add(this.rightUpperArm);
         this.rightUpperArm.add(this.rightElbow);
         this.rightElbow.add(this.rightLowerArm);

@@ -1,11 +1,8 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
-import {idleToAim, aimToIdle} from "./animations.js";
+import {idleToAim, aimToIdle, shoot} from "./animations.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
-
-const robotWidth = 1, robotHeight = 2;
-const bulletRadius = 0.2;
 
 const numTeams = 2;
 const robotsPerTeam = 4;
@@ -19,8 +16,6 @@ const robotBodies = [];
 
 const bullets = [];
 const bulletBodies = [];
-
-let globalCamera;
 
 //Creates new cameras
 function makeCamera(near = 1, far = 75) {
@@ -49,10 +44,11 @@ function main() {
     };
 
     //Detached camera looking from above
-    globalCamera = makeCamera(40, 55);
+    const globalCamera = makeCamera(40, 55);
     globalCamera.position.y = 50;
     globalCamera.lookAt(0, 0, 0);
 
+    //First robot
     currentRobot = robots[0];
     let camera = currentRobot.thirdPersonCamera;        //Start from first robot's camera
 
@@ -61,6 +57,10 @@ function main() {
     let moveBackward = false;
     let turnLeft = false;
     let turnRight = false;
+
+    let aimUp = false;
+    let aimDown = false;
+
     let global = false;                 //True = look from above
     let firstPerson = false;            //True = first person camera
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
@@ -68,42 +68,58 @@ function main() {
     document.addEventListener("keydown", (e) => {
         switch (e.code) {
             //Move or shoot only if you haven't shot yet
-            case "KeyW":                //Move forward
+            case "KeyW":
                 if (!waitForCollision) {
-                    moveForward = true;
+                    if (!firstPerson) {
+                        moveForward = true;
+                    }
+                    else {
+                        aimUp = true;
+                    }
                 }
                 break;
-            case "KeyS":                //Move backward
+            case "KeyS":
                 if (!waitForCollision) {
-                    moveBackward = true;
+                    if (!firstPerson) {
+                        moveBackward = true;
+                    }
+                    else {
+                        aimDown = true;
+                    }
                 }
                 break;
-            case "KeyA":                //Turn left
+            case "KeyA":
                 if (!waitForCollision) {
                     turnLeft = true;
                 }
                 break;
-            case "KeyD":                //Turn right
+            case "KeyD":
                 if (!waitForCollision) {
                     turnRight = true;
                 }
                 break;
-            case "Space":               //Shoot
-                if (!waitForCollision) {
-                    waitForCollision = true;        //Stop acting
+            case "Space":
+                if (!waitForCollision && firstPerson) {
+                    //Stop acting
+                    waitForCollision = true;
+
+                    //Reset all flags (stay still)
                     moveForward = false;
                     moveBackward = false;
                     turnLeft = false;
                     turnRight = false;
+                    aimUp = false;
+                    aimDown = false;
+
                     const bulletBody = bullet();
                     bulletBody.addEventListener("collide", nextTurn);
-                    aimToIdle(currentRobot);
+                    shoot(currentRobot)
                 }
                 break;
             //Camera handling
             case "KeyE":                //Global camera
                 if (!global) {          //Switch to global camera
-                    if (firstPerson) {
+                    if (firstPerson) {      //Go back to idle after aiming
                         aimToIdle(currentRobot);
                     }
                     global = true;
@@ -118,29 +134,53 @@ function main() {
                 break;
             case "KeyQ":                //First person camera
                 if (!firstPerson) {     //Switch to first person camera
+                    //Stop moving while aiming
+                    moveForward = false;
+                    moveBackward = false;
+                    turnLeft = false;
+                    turnRight = false;
+
                     idleToAim(currentRobot);
                     firstPerson = true;
                     global = false;
+                    //Interrupted animations could have left the head looking somewhere else
+                    currentRobot.head.rotation.x = 0;
                     camera = currentRobot.firstPersonCamera;
                 }
                 else {                  //Switch back to third person camera
+                    //Reset all flags
+                    aimUp = false;
+                    aimDown = false;
+                    turnLeft = false;
+                    turnRight = false;
+
                     aimToIdle(currentRobot);
                     firstPerson = false;
                     global = false;
                     camera = currentRobot.thirdPersonCamera;
                 }
                 break;
-            
         }
     });
+
     document.addEventListener("keyup", (e) => {
         //Stop moving
         switch (e.code) {
             case "KeyW":
-                moveForward = false;
+                if (!firstPerson) {
+                    moveForward = false;
+                }
+                else {
+                    aimUp = false;
+                }
                 break;
             case "KeyS":
-                moveBackward = false;
+                if (!firstPerson) {
+                    moveBackward = false;
+                }
+                else {
+                    aimDown = false;
+                }
                 break;
             case "KeyA":
                 turnLeft = false;
@@ -155,16 +195,18 @@ function main() {
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         setTimeout(() => {                              //Change turn some time after the collision
+            aimToIdle(currentRobot);                    //Back to idle when turn ends
             currentRobotNumber = (currentRobotNumber + 1) % numRobots;
             currentRobot = robots[currentRobotNumber];
             camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
-            global = false;                             //Reset everything
+
+            global = false;                             //Reset
             firstPerson = false;
             waitForCollision = false;
         }, 1500);
     }
 
-    //Move the robot and copy the coordinates to its physics body (called at every render)
+    //Move the robot and copy the coordinates to its physics body
     function move() {
         //const currentRobotBody = robotBodies[currentRobotNumber];
         const speed = 0.2;
@@ -196,9 +238,30 @@ function main() {
         }
     }
 
+    //Aim when in first person
+    function aim() {
+        const rotation = 0.01;
+        
+        if (aimUp) {
+            currentRobot.head.rotation.x += rotation;
+            currentRobot.rightShoulder.rotation.x += rotation;
+        }
+        if (aimDown) {
+            currentRobot.head.rotation.x += -rotation;
+            currentRobot.rightShoulder.rotation.x += -rotation;
+        }
+        if (turnLeft) {
+            currentRobot.waist.rotation.y += rotation;
+        }
+        if (turnRight) {
+            currentRobot.waist.rotation.y += -rotation;
+        }
+    }
+
     //Shoot a new bullet
     function bullet() {
         //Bullet
+        const bulletRadius = 0.2;
         const segments = 8;
         const bulletGeometry = new THREE.SphereGeometry(bulletRadius, segments, segments);
         const bulletMaterial = new THREE.MeshPhongMaterial({color: "gray"});
@@ -247,7 +310,12 @@ function main() {
         //cannonDebugRenderer.update();
 
         //Move the robot
-        move();
+        if (!firstPerson) {
+            move();
+        }
+        else {
+            aim();
+        }
         TWEEN.update();
 
         //Copy coordinates from CANNON to THREE for each bullet

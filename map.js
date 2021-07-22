@@ -29,8 +29,8 @@ function createLights(scene) {
     directionalLight.shadow.camera.top = 20;
     directionalLight.shadow.camera.left = -27;
     directionalLight.shadow.camera.right = 27;
-    directionalLight.shadow.mapSize.width = 4096;
-    directionalLight.shadow.mapSize.width = 4096;
+    directionalLight.shadow.mapSize.width = 5120;
+    directionalLight.shadow.mapSize.width = 5120;
 
     //Ambient light
     const intensityAmb = 0.45;
