@@ -49,7 +49,7 @@ class Robot {
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene) {
-        this.health = 100;
+        this.health = 3;
 
         const material = new THREE.MeshPhongMaterial();
         if (robotNumber % 2 == 0) {           //Even robot = red team; odd robot = blue team

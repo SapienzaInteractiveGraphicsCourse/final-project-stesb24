@@ -197,14 +197,16 @@ function main() {
         }
     });
 
+    //Charge up the shot and then shoot
     function chargeShot() {
         let power = 0;
         let interval = setInterval(() => {
             power += 0.1;
             console.log(power);
-            if (!charging) {
+            if (!charging || power >= 10) {     //Stopped charging or max charge
                 clearInterval(interval);
-
+                
+                //Create new bullet and wait for next turn
                 const bulletBody = bullet(power);
                 bulletBody.addEventListener("collide", nextTurn);
                 shoot(currentRobot)
@@ -224,8 +226,6 @@ function main() {
         //Bullet initial position
         let initialCoords = new THREE.Vector3();
         currentRobot.rightHand.getWorldPosition(initialCoords);     //Hand gives the bullet's initial coordinates
-        const horizontalAngle = currentRobot.waist.rotation.y;
-        const verticalAngle = currentRobot.head.rotation.x;
         bulletMesh.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
         bulletMesh.castShadow = true;
         bulletMesh.receiveShadow = true;
@@ -235,8 +235,10 @@ function main() {
         const bulletBody = new CANNON.Body({mass: 1});
         bulletBody.addShape(bulletShape);
 
-        //Break the vector over the three axes
-        const effectivePower = power * 1.85;
+        //Break the shot vector over the three axes
+        const effectivePower = power * 2.2;             //Scale up the power (too weak)
+        const horizontalAngle = currentRobot.waist.rotation.y;
+        const verticalAngle = currentRobot.head.rotation.x;
         const projection = effectivePower * Math.cos(verticalAngle);     //Project the vector on the xz plane
         const powerY = effectivePower * Math.sin(verticalAngle);
         const powerX = projection * -Math.sin(horizontalAngle);
@@ -301,16 +303,18 @@ function main() {
 
     //Aim when in first person
     function aim() {
+        //How much the robot rotates
         const rotation = 0.005;
 
+        //No if-else so that you can use them together
         if (aimUp) {
-            if (currentRobot.head.rotation.x < Math.PI / 2) {
+            if (currentRobot.head.rotation.x < Math.PI / 2) {       //Max angle
                 currentRobot.head.rotation.x += rotation;
                 currentRobot.rightShoulder.rotation.x += rotation;
             }
         }
         if (aimDown) {
-            if (currentRobot.head.rotation.x > -Math.PI / 6) {
+            if (currentRobot.head.rotation.x > -Math.PI / 6) {      //Min angle
                 currentRobot.head.rotation.x += -rotation;
                 currentRobot.rightShoulder.rotation.x += -rotation;
             }

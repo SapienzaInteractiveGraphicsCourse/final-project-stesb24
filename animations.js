@@ -1,6 +1,6 @@
 let currentTween;           //Animation currently being executed
 
-function stopTween() {      //Stop the current animation, if there is one
+function stopTween() {      //Stop the current animation, if there is one, so that they don't overwrite each other
     if (currentTween) {
         currentTween.stop();
     }
