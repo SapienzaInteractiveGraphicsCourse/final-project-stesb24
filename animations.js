@@ -37,8 +37,9 @@ function shoot(robot) {
     const shootToAim = new TWEEN.Tween([
             robot.torso.rotation,
             robot.rightShoulder.rotation,
-            robot.rightElbow.rotation])
-        .to([{y: 0}, {x: Math.PI/2, z: -Math.PI/10}, {x: Math.PI/15}], 300)
+            robot.rightElbow.rotation,
+            robot.head.rotation])
+        .to([{y: 0}, {x: Math.PI/2, z: -Math.PI/10}, {x: Math.PI/15}, {x: 0}], 300)
         .easing(TWEEN.Easing.Linear.None)
         .delay(100);
 
@@ -47,5 +48,16 @@ function shoot(robot) {
     currentTween = aimToShoot;
 }
 
-//idleToWalk walk walkToIdle idle
-export {idleToAim, aimToIdle, shoot};
+function idle(robot) {
+    new TWEEN.Tween([
+        robot.torso.position,
+        robot.leftLegPivot.rotation,
+        robot.rightLegPivot.rotation,
+        robot.leftKnee.rotation,
+        robot.rightKnee.rotation])
+    .to([{y: 0.48}, {x: Math.PI/20}, {x: Math.PI/20}, {x: -Math.PI/10}, {x: -Math.PI/10}], 1200)
+    .easing(TWEEN.Easing.Linear.None).repeat(Infinity).yoyo(true).start();
+}
+
+//idleToWalk walk walkToIdle
+export {idleToAim, aimToIdle, shoot, idle};

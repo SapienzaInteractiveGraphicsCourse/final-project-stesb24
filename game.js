@@ -1,7 +1,7 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
-import {idleToAim, aimToIdle, shoot} from "./animations.js";
+import {idleToAim, aimToIdle, shoot, idle} from "./animations.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
 const numTeams = 2;
@@ -40,7 +40,10 @@ function main() {
 
     //Create the robots and their cameras
     for (let i=0; i < numRobots; i++) {
-        robots.push(new Robot(i, scene));
+        const robot = new Robot(i, scene);
+        robots.push(robot);
+
+        idle(robot);
     };
 
     //Detached camera looking from above
@@ -119,7 +122,7 @@ function main() {
             //Camera handling
             case "KeyE":                //Global camera
                 if (!global) {          //Switch to global camera
-                    if (firstPerson) {      //Go back to idle after aiming
+                    if (firstPerson) {      //If aiming, go back to idle
                         aimToIdle(currentRobot);
                     }
                     global = true;
@@ -209,11 +212,11 @@ function main() {
     //Move the robot and copy the coordinates to its physics body
     function move() {
         //const currentRobotBody = robotBodies[currentRobotNumber];
-        const speed = 0.2;
+        const speed = 0.085;
         //How much the robot moves on x and z and how much it rotates
         const movementX = Math.sin(currentRobot.waist.rotation.y) * speed;
         const movementZ = Math.cos(currentRobot.waist.rotation.y) * speed;
-        const rotation = 0.03;
+        const rotation = 0.02;
 
         //No if-else so that you can use them together
         if (moveForward) {
@@ -240,8 +243,8 @@ function main() {
 
     //Aim when in first person
     function aim() {
-        const rotation = 0.01;
-        
+        const rotation = 0.007;
+
         if (aimUp) {
             currentRobot.head.rotation.x += rotation;
             currentRobot.rightShoulder.rotation.x += rotation;

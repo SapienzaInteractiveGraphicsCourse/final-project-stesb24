@@ -75,17 +75,12 @@ class Robot {
         this.waist.position.set(initialX, initialY, initialZ);
         this.waist.rotation.y = initialCoordinates[robotNumber][2];
 
-        //Torso
+        //Torso (waist's child)
         const torsoGeometry = new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth);
         this.torso = new THREE.Mesh(torsoGeometry, material);
         this.torso.position.y = torsoHeight / 2;
 
-        //Head
-        const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
-        this.head = new THREE.Mesh(headGeometry, material);
-        this.head.position.y = torsoHeight + headRadius - 0.08;
-
-        //Left leg
+        //Left leg (waist's child)
         this.leftLegPivot = new THREE.Object3D();
         this.leftLegPivot.position.x = -torsoWidth / 2 + legWidth / 2;
 
@@ -98,7 +93,7 @@ class Robot {
         this.leftLowerLeg = new THREE.Mesh(legGeometry, material);
         this.leftLowerLeg.position.y = -legHeight / 2;
 
-        //Right leg
+        //Right leg (waist's child)
         this.rightLegPivot = new THREE.Object3D();
         this.rightLegPivot.position.x = torsoWidth / 2 - legWidth / 2;
 
@@ -111,7 +106,7 @@ class Robot {
         this.rightLowerLeg = new THREE.Mesh(legGeometry, material);
         this.rightLowerLeg.position.y = -legHeight / 2;
 
-        //Left arm
+        //Left arm (torso's child)
         this.leftShoulder = new THREE.Mesh(sphereGeometry, material);
         this.leftShoulder.position.x = -torsoWidth / 2 - sphereRadius + 0.05;
         this.leftShoulder.position.y = torsoHeight / 2 - 0.075;
@@ -127,7 +122,7 @@ class Robot {
         this.leftLowerArm = new THREE.Mesh(armGeometry, material);
         this.leftLowerArm.position.y = -armHeight / 2;
 
-        //Right Arm
+        //Right Arm (torso's child)
         this.rightShoulder = new THREE.Mesh(sphereGeometry, material);
         this.rightShoulder.position.x = torsoWidth / 2 + sphereRadius - 0.05;
         this.rightShoulder.position.y = torsoHeight / 2 - 0.075;
@@ -144,19 +139,21 @@ class Robot {
         this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, material);
         this.rightLowerArm.position.y = -armHeight / 2;
 
-        //Cameras
-        this.thirdPersonCamera = makeCamera();
-        this.thirdPersonCamera.position.set(0, 1.5, 5.5);
-        this.thirdPersonCamera.lookAt(0, 0, -2.5);
+        //Head (torso's child)
+        const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
+        this.head = new THREE.Mesh(headGeometry, material);
+        this.head.position.y = torsoHeight + headRadius - 0.1;
 
-        this.firstPersonCamera = makeCamera(0.15);
+        //Cameras
+        this.thirdPersonCamera = makeCamera();          //Waist's child
+        this.thirdPersonCamera.position.set(0, 2.8, 5.5);
+        this.thirdPersonCamera.lookAt(0, 0, -9);
+
+        this.firstPersonCamera = makeCamera(0.15);      //Head's child
         this.firstPersonCamera.position.set(0, 0, 0);
         this.firstPersonCamera.lookAt(0, 0, -1);
 
         //Build hierarchical model
-        this.waist.add(this.torso)
-        this.waist.add(this.head);
-
         this.waist.add(this.leftLegPivot);
         this.leftLegPivot.add(this.leftUpperLeg);
         this.leftUpperLeg.add(this.leftKnee);
@@ -166,6 +163,10 @@ class Robot {
         this.rightLegPivot.add(this.rightUpperLeg);
         this.rightUpperLeg.add(this.rightKnee);
         this.rightKnee.add(this.rightLowerLeg);
+
+        this.waist.add(this.thirdPersonCamera);
+
+        this.waist.add(this.torso);
 
         this.torso.add(this.leftShoulder);
         this.leftShoulder.add(this.leftUpperArm);
@@ -177,7 +178,8 @@ class Robot {
         this.rightUpperArm.add(this.rightElbow);
         this.rightElbow.add(this.rightLowerArm);
 
-        this.head.add(this.thirdPersonCamera);
+        this.waist.add(this.head);
+
         this.head.add(this.firstPersonCamera);
 
         //Shadows
