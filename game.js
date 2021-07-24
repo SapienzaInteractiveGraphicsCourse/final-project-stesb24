@@ -1,11 +1,11 @@
-//import * as THREE from "./libs/three.module.js";    //r130
+import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
 const numTeams = 2;
 const robotsPerTeam = 4;
-const numRobots = numTeams * robotsPerTeam;
+let numRobots = numTeams * robotsPerTeam;
 
 const robots = [];
 let currentRobotNumber = 0;
@@ -277,9 +277,18 @@ function main() {
             var c = world.contacts[i];
             robots.forEach((robot) => {                 //Check if contact is between the bullet and a robot
                 if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
-                    robot.hit();                        //Decrease health
+                    if (robot.decreaseHealth()) {       //Remove the dead robot
+                        const index = robots.indexOf(robot);
+                        robots.splice(index, 1);
+                        numRobots--;
+                    }
                 }
             });
+        }
+
+        //TO CORRECT!
+        if (numRobots == 1) {                       //Last player remaining is the winner
+            gameOver();
         }
 
         setTimeout(() => {                              //Change turn some time after the collision
@@ -353,16 +362,20 @@ function main() {
         }
     }
 
+    function gameOver() {
+
+    }
+
     const canvas = document.querySelector("#c");
     const renderer = new THREE.WebGLRenderer({canvas});
     renderer.shadowMap.enabled = true;
     
-    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        cannonDebugRenderer.update();
+        //cannonDebugRenderer.update();
 
         //Move the robot
         move();

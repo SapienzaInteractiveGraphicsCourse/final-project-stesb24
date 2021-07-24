@@ -198,6 +198,19 @@ class Robot {
         this.still = true;          //Robot is not moving
     }
 
+    decreaseHealth() {            //Returns true if the robot dies
+        this.health--;
+        console.log(this.health);
+        if (this.health > 0) {
+            this.hit();
+            return false;
+        }
+        else {
+            this.death();
+            return true;
+        }
+    }
+
     //Animations
     idleToWalk() {                  //Start walking (right leg goes forward) then walk()
         if (this.still) {
@@ -373,8 +386,11 @@ class Robot {
     }
 
     hit() {
-        this.health--;
-        console.log(this.health);
+
+    }
+
+    death() {
+
     }
 }
 
