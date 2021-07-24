@@ -32,7 +32,7 @@ const sphereRadius = 0.135;
 const sphereSegments = 10;
 
 class Robot {
-    //This class contains: health, currentTween, idle,
+    //This class contains: health, currentTween, still,
     //waist, torso, head,
     //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
     //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
@@ -199,11 +199,6 @@ class Robot {
 
         this.currentTween;          //Current animation
         this.still = true;          //Robot is not moving
-
-        /*this.rightLegPivot.rotation.x = Math.PI/6
-        this.rightKnee.rotation.x = -Math.PI/6
-        this.leftLegPivot.rotation.x = -Math.PI/12
-        this.leftKnee.rotation.x = -Math.PI/6*/
     }
 
     idleToWalk() {                  //Start walking (right leg goes forward) then walk()
