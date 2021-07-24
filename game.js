@@ -7,11 +7,9 @@ const numTeams = 2;
 const robotsPerTeam = 4;
 const numRobots = numTeams * robotsPerTeam;
 
+const robots = [];
 let currentRobotNumber = 0;
 let currentRobot;
-
-const robots = [];
-const robotBodies = [];
 
 const bullets = [];
 const bulletBodies = [];
@@ -33,6 +31,7 @@ function main() {
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
+    world.defaultContactMaterial.friction = 0;
 
     //Create all lights and objects
     createMap(scene, world);
@@ -41,19 +40,22 @@ function main() {
     for (let i=0; i < numRobots; i++) {
         const robot = new Robot(i, scene, world);
         robots.push(robot);
-        robotBodies.push(robot.body);
 
         robot.idle();
     };
 
     //Detached camera looking from above
     const globalCamera = makeCamera(40, 55);
-    globalCamera.position.y = 50;
+    globalCamera.position.y = 52;
     globalCamera.lookAt(0, 0, 0);
 
     //First robot
     currentRobot = robots[0];
-    let camera = currentRobot.thirdPersonCamera;        //Start from first robot's camera
+    currentRobot.body.mass = 10;                      //The robot that acts must be affected by all physics (collides)
+    currentRobot.body.type = CANNON.Body.DYNAMIC;
+    currentRobot.body.updateMassProperties();
+
+    let camera = currentRobot.thirdPersonCamera;      //Start from first robot's camera
 
     //Keyboard controls
     let moveForward = false;
@@ -212,7 +214,12 @@ function main() {
             console.log(power);
             if (!charging || power >= 10) {     //Stopped charging or max charge
                 camera = currentRobot.thirdPersonCamera;
-                clearInterval(interval);
+                clearInterval(interval);        //Stop loop
+
+                //Robot becomes static again
+                currentRobot.body.mass = 0;
+                currentRobot.body.type = CANNON.Body.STATIC;
+                currentRobot.body.updateMassProperties();
                 
                 //Create new bullet and wait for next turn
                 const bulletBody = bullet(power);
@@ -247,8 +254,8 @@ function main() {
         const effectivePower = power * 2.5;             //Scale up the power (too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
-        const projection = effectivePower * Math.cos(verticalAngle);     //Project the vector on the xz plane
         const powerY = effectivePower * Math.sin(verticalAngle);
+        const projection = effectivePower * Math.cos(verticalAngle);     //Project the vector on the xz plane
         const powerX = projection * -Math.sin(horizontalAngle);
         const powerZ = projection * -Math.cos(horizontalAngle);
         bulletBody.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
@@ -270,45 +277,47 @@ function main() {
             currentRobot = robots[currentRobotNumber];
             camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
 
-            global = false;                             //Reset
+            //The new robot becomes dynamic
+            currentRobot.body.mass = 10;
+            currentRobot.body.type = CANNON.Body.DYNAMIC;
+            currentRobot.body.updateMassProperties();
+
+            global = false;                             //Reset flags
             firstPerson = false;
             waitForCollision = false;
         }, 1500);
     }
 
-    //Move the robot and copy the coordinates to its physics body
+    //Move the robot (applying forces in case)
     function move() {
-        //const currentRobotBody = robotBodies[currentRobotNumber];
-        const speed = 0.06;
-        //How much the robot moves on x and z and how much it rotates
-        const movementX = Math.sin(currentRobot.waist.rotation.y) * speed;
-        const movementZ = Math.cos(currentRobot.waist.rotation.y) * speed;
+        const speed = 3.3;
+        //Speed over x and z and how much the robot rotates
+        const speedX = Math.sin(currentRobot.waist.rotation.y) * speed;
+        const speedZ = Math.cos(currentRobot.waist.rotation.y) * speed;
         const rotation = 0.02;
 
         //No if-else so that you can use them together
-        if (moveForward) {
-            currentRobot.waist.position.x += -movementX;
-            currentRobot.waist.position.z += -movementZ;
-            //currentRobot.body.position.x += -movementX;
-            //currentRobot.body.position.z += -movementZ;
-            currentRobot.body.position.copy(currentRobot.waist.position)
+
+        if (!moveForward && !moveBackward) {
+            currentRobot.body.velocity.set(0, 0, 0);
         }
+
         if (moveBackward) {
-            currentRobot.waist.position.x += movementX;
-            currentRobot.waist.position.z += movementZ;
-            //currentRobot.body.position.x += movementX;
-            //currentRobot.body.position.z += movementZ;
-            currentRobot.body.position.copy(currentRobot.waist.position)
+            currentRobot.body.velocity.set(speedX, 0, speedZ);                  //Move body
+            currentRobot.waist.position.set(currentRobot.body.position.x,       //Move mesh accordingly
+                currentRobot.body.position.y, currentRobot.body.position.z);
         }
-        if (turnLeft) {
+        if (moveForward) {
+            currentRobot.body.velocity.set(-speedX, 0, -speedZ);                //Move body
+            currentRobot.waist.position.set(currentRobot.body.position.x,       //Move mesh accordingly
+                currentRobot.body.position.y, currentRobot.body.position.z);
+        }
+
+        if (turnLeft && !firstPerson) {
             currentRobot.waist.rotation.y += rotation;
-            //currentRobot.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.waist.rotation.y);
-            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
-        if (turnRight) {
+        if (turnRight && !firstPerson) {
             currentRobot.waist.rotation.y += -rotation;
-            //currentRobot.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.waist.rotation.y);
-            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
     }
 
@@ -326,13 +335,11 @@ function main() {
             currentRobot.head.rotation.x += -rotation;
             currentRobot.rightShoulder.rotation.x += -rotation;
         }
-        if (turnLeft) {
+        if (turnLeft && firstPerson) {
             currentRobot.waist.rotation.y += rotation;
-            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
-        if (turnRight) {
+        if (turnRight && firstPerson) {
             currentRobot.waist.rotation.y += -rotation;
-            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
     }
 
@@ -348,22 +355,17 @@ function main() {
         //cannonDebugRenderer.update();
 
         //Move the robot
-        if (!firstPerson) {
-            move();
-        }
-        else {
-            aim();
-        }
+        move();
+        aim();
         TWEEN.update();
 
-        //Copy coordinates from CANNON to THREE for each bullet
+        //We move the body but want the mesh's rotation
+        currentRobot.body.quaternion.copy(currentRobot.waist.quaternion);
+
+        //Copy coordinates from Cannon to Three for each bullet
         bullets.forEach((bullet, index) => {
             bullet.position.copy(bulletBodies[index].position);
             bullet.quaternion.copy(bulletBodies[index].quaternion);
-        });
-        robots.forEach((robot, index) => {
-            //robot.waist.position.copy(robotBodies[index].position);
-            //robot.waist.quaternion.copy(robotBodies[index].quaternion);
         });
 
         //The aspect of the cameras matches the aspect of the canvas (no distortions)

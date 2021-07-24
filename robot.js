@@ -32,8 +32,8 @@ const sphereRadius = 0.135;
 const sphereSegments = 10;
 
 class Robot {
-    //This class contains: health, currentTween, still,
-    //waist, torso, head,
+    //This class contains: currentTween, still,
+    //health, body, waist, torso, head,
     //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
     //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
     //leftShoulder, leftUpperArm, leftElbow, leftLowerArm,
@@ -59,10 +59,7 @@ class Robot {
         //Waist ("container" for the whole robot)
         this.waist = new THREE.Object3D();
         const initialX = initialCoordinates[robotNumber][0];
-        let initialY = 2 * legHeight;
-        if (robotNumber == 5) {
-            initialY += 3;
-        }
+        const initialY = 2 * legHeight;
         const initialZ = initialCoordinates[robotNumber][1];
         const initialAngle = initialCoordinates[robotNumber][2];
         this.waist.position.set(initialX, initialY, initialZ);
@@ -343,7 +340,7 @@ class Robot {
         shootTween.onComplete(() => this.aimToIdle(540, 150))
     }
 
-    idle() {
+    idle() {                        //Up and down with torso
         if (this.still) {
             this.currentTween = new TWEEN.Tween([
                     this.torso.position,
