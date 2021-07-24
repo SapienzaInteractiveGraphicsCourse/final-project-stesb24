@@ -7,15 +7,6 @@ const initialCoordinates = [
     [16.5, -11.5, Math.PI], [2, -9, Math.PI], [-17, 3.5, -Math.PI/2], [12.5, -18.5, Math.PI/2]
 ];
 
-/*function createCharacter(boxWidth, boxHeight, boxNumber) {
-    //Box physics
-    const halfExtents = new CANNON.Vec3(boxWidth / 2, boxHeight / 2, boxWidth / 2);
-    const boxShape = new CANNON.Box(halfExtents);
-    const boxBody = new CANNON.Body({mass: 0});
-    boxBody.addShape(boxShape);
-    boxBody.position.set(initialX, initialY, initialZ);
-}*/
-
 //Robot sizes
 //Torso
 const torsoWidth = 0.6;
@@ -25,7 +16,7 @@ const torsoDepth = 0.45;
 const headRadius = 0.35;
 const headSegments = 15;
 //Legs
-const legWidth = 0.22;
+const legWidth = 0.25;
 const legHeight = 0.5;
 const legDepth = 0.24;
 //Arms
@@ -41,14 +32,15 @@ const sphereRadius = 0.135;
 const sphereSegments = 10;
 
 class Robot {
-    //This class contains: health, waist, torso, head,
+    //This class contains: health, currentTween, idle,
+    //waist, torso, head,
     //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
     //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
     //leftShoulder, leftUpperArm, leftElbow, leftLowerArm,
     //rightShoulder, rightUpperArm, rightElbow, rightLowerArm, rightHand,
     //thirdPersonCamera, firstPersonCamera
 
-    constructor(robotNumber, scene) {
+    constructor(robotNumber, scene, world) {
         this.health = 3;
 
         const material = new THREE.MeshPhongMaterial();
@@ -72,8 +64,9 @@ class Robot {
             initialY += 3;
         }
         const initialZ = initialCoordinates[robotNumber][1];
+        const initialAngle = initialCoordinates[robotNumber][2];
         this.waist.position.set(initialX, initialY, initialZ);
-        this.waist.rotation.y = initialCoordinates[robotNumber][2];
+        this.waist.rotation.y = initialAngle;
 
         //Torso (waist's child)
         const torsoGeometry = new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth);
@@ -194,7 +187,160 @@ class Robot {
             }
         });
 
+        const halfExtents = new CANNON.Vec3(torsoWidth / 2, torsoHeight, torsoDepth / 2);
+        const boxShape = new CANNON.Box(halfExtents);
+        this.body = new CANNON.Body({mass: 0});
+        this.body.addShape(boxShape);
+        this.body.position.set(initialX, initialY, initialZ);
+        this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), initialAngle);
+
         scene.add(this.waist);
+        world.add(this.body);
+
+        this.currentTween;          //Current animation
+        this.still = true;          //Robot is not moving
+
+        /*this.rightLegPivot.rotation.x = Math.PI/6
+        this.rightKnee.rotation.x = -Math.PI/6
+        this.leftLegPivot.rotation.x = -Math.PI/12
+        this.leftKnee.rotation.x = -Math.PI/6*/
+    }
+
+    idleToWalk() {                  //Start walking (right leg goes forward) then walk()
+        if (this.still) {
+            this.stopTween();
+            this.still = false;
+
+            this.currentTween = new TWEEN.Tween([         //Right forward, left backward
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: Math.PI/6}, {x: -Math.PI/6}, {x: -Math.PI/12}, {x: -Math.PI/6},
+                {x: -Math.PI/8, z: Math.PI/20}, {x: Math.PI/8}], 180)
+            .easing(TWEEN.Easing.Linear.None).start();
+
+            this.currentTween.onComplete(() => {
+                this.currentTween.stop();
+                this.walk();
+            });
+        }
+    }
+
+    walk() {                        //Alternate left leg and right leg
+        this.stopTween();
+
+        this.currentTween = new TWEEN.Tween([         //Right straight, left bent
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: 0}, {x: 0}, {x: Math.PI/6}, {x: -Math.PI/3},
+                {x: 0}, {x: 0}], 180)
+            .easing(TWEEN.Easing.Quadratic.In);
+        const keyFrame1 = new TWEEN.Tween([           //Right backward, left forward
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: -Math.PI/12}, {x: -Math.PI/6}, {x: Math.PI/6}, {x: -Math.PI/6},
+                {x: Math.PI/8}, {x: -Math.PI/8}], 180)
+            .easing(TWEEN.Easing.Linear.None);
+        
+        const keyFrame2 = new TWEEN.Tween([           //Right bent, left straight
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: Math.PI/6}, {x: -Math.PI/3}, {x: 0}, {x: 0},
+                {x: 0}, {x: 0}], 180)
+            .easing(TWEEN.Easing.Quadratic.In);
+        const keyFrame3 = new TWEEN.Tween([           //Right forward, left backward
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: Math.PI/6}, {x: -Math.PI/6}, {x: -Math.PI/12}, {x: -Math.PI/6},
+                {x: -Math.PI/8}, {x: Math.PI/8}], 180)
+            .easing(TWEEN.Easing.Linear.None);
+
+        this.currentTween.chain(keyFrame1);
+        keyFrame1.chain(keyFrame2);
+        keyFrame2.chain(keyFrame3);
+        keyFrame3.chain(this.currentTween);
+
+        this.currentTween.start();
+    }
+
+    walkToIdle() {                  //Stop walking (go back to initial position)
+        this.stopTween();
+
+        this.currentTween = new TWEEN.Tween([
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: 0}, {x: 0}, {x: 0}, {x: 0}, {x: 0}, {x: 0}], 300)
+            .easing(TWEEN.Easing.Linear.None).start();
+
+        this.still = true;
+    }
+
+    toAim() {
+        this.stopTween();
+        this.still = true;
+
+        this.currentTween = new TWEEN.Tween([
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.torso.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation])
+            .to([{x: 0}, {x: 0}, {x: 0}, {x: 0},
+                {y: 0}, {x: Math.PI/2, z: -Math.PI/10}, {x: Math.PI/15}], 150)
+            .easing(TWEEN.Easing.Quadratic.InOut).start();
+    }
+
+    aimToIdle(time = 400, delay = 0) {
+        this.stopTween();
+        this.currentTween = new TWEEN.Tween([
+                this.torso.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation,
+                this.head.rotation])
+            .to([{y: 0}, {x: 0, z: Math.PI/20}, {x: Math.PI/15}, {x: 0}], time)
+            .easing(TWEEN.Easing.Quadratic.Out).delay(delay).start();
+    }
+
+    shoot() {
+        const shootTween = new TWEEN.Tween([
+            this.torso.rotation,
+            this.rightShoulder.rotation,
+            this.rightElbow.rotation])
+        .to([{y: -Math.PI/12}, {z: Math.PI/8}, {x: Math.PI/2}], 150)
+        .easing(TWEEN.Easing.Exponential.Out).start();
+
+        shootTween.onComplete(() => this.aimToIdle(540, 150))
+    }
+
+    stopTween() {
+        if (this.currentTween) {
+            this.currentTween.stop();
+        }
     }
 }
 

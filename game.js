@@ -1,7 +1,6 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
-import {idleToAim, aimToIdle, shoot, idle} from "./animations.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
 
 const numTeams = 2;
@@ -40,10 +39,9 @@ function main() {
 
     //Create the robots and their cameras
     for (let i=0; i < numRobots; i++) {
-        const robot = new Robot(i, scene);
+        const robot = new Robot(i, scene, world);
         robots.push(robot);
-
-        idle(robot);
+        robotBodies.push(robot.body);
     };
 
     //Detached camera looking from above
@@ -66,43 +64,46 @@ function main() {
 
     let global = false;                 //True = look from above
     let firstPerson = false;            //True = first person camera
-    let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
+
     let charging = false;               //True = charging the shot
+    let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
 
     document.addEventListener("keydown", (e) => {
         switch (e.code) {
-            //Move or shoot only if you haven't shot yet
+            //Move or shoot only if you haven't shot yet (!waitForCollision)
             case "KeyW":
                 if (!waitForCollision) {
-                    if (!firstPerson) {
+                    if (!firstPerson) {         //Move
                         moveForward = true;
+                        currentRobot.idleToWalk();
                     }
-                    else {
+                    else {                      //Aim
                         aimUp = true;
                     }
                 }
                 break;
             case "KeyS":
                 if (!waitForCollision) {
-                    if (!firstPerson) {
+                    if (!firstPerson) {         //Move
                         moveBackward = true;
+                        currentRobot.idleToWalk();
                     }
-                    else {
+                    else {                      //Aim
                         aimDown = true;
                     }
                 }
                 break;
             case "KeyA":
                 if (!waitForCollision) {
-                    turnLeft = true;
+                    turnLeft = true;            //Move or aim
                 }
                 break;
             case "KeyD":
                 if (!waitForCollision) {
-                    turnRight = true;
+                    turnRight = true;           //Move or aim
                 }
                 break;
-            case "Space":
+            case "Space":                       //Charge
                 if (!waitForCollision && firstPerson) {
                     //Stop acting
                     waitForCollision = true;
@@ -123,7 +124,7 @@ function main() {
             case "KeyE":                //Global camera
                 if (!global) {          //Switch to global camera
                     if (firstPerson) {      //If aiming, go back to idle
-                        aimToIdle(currentRobot);
+                        currentRobot.aimToIdle();
                     }
                     global = true;
                     firstPerson = false;
@@ -136,31 +137,33 @@ function main() {
                 }
                 break;
             case "KeyQ":                //First person camera
-                if (!firstPerson) {     //Switch to first person camera
-                    //Stop moving while aiming
-                    moveForward = false;
-                    moveBackward = false;
-                    turnLeft = false;
-                    turnRight = false;
+                if (!waitForCollision) {
+                    if (!firstPerson) {     //Switch to first person camera
+                        //Stop moving while aiming
+                        moveForward = false;
+                        moveBackward = false;
+                        turnLeft = false;
+                        turnRight = false;
 
-                    idleToAim(currentRobot);
-                    firstPerson = true;
-                    global = false;
-                    //Interrupted animations could have left the head looking somewhere else
-                    currentRobot.head.rotation.x = 0;
-                    camera = currentRobot.firstPersonCamera;
-                }
-                else {                  //Switch back to third person camera
-                    //Reset all flags
-                    aimUp = false;
-                    aimDown = false;
-                    turnLeft = false;
-                    turnRight = false;
+                        currentRobot.toAim();
+                        firstPerson = true;
+                        global = false;
+                        //Interrupted animations could have left the head looking somewhere else
+                        currentRobot.head.rotation.x = 0;
+                        camera = currentRobot.firstPersonCamera;
+                    }
+                    else {                  //Switch back to third person camera
+                        //Reset all aiming flags
+                        aimUp = false;
+                        aimDown = false;
+                        turnLeft = false;
+                        turnRight = false;
 
-                    aimToIdle(currentRobot);
-                    firstPerson = false;
-                    global = false;
-                    camera = currentRobot.thirdPersonCamera;
+                        currentRobot.aimToIdle();
+                        firstPerson = false;
+                        global = false;
+                        camera = currentRobot.thirdPersonCamera;
+                    }
                 }
                 break;
         }
@@ -170,48 +173,51 @@ function main() {
         //Stop moving
         switch (e.code) {
             case "KeyW":
-                if (!firstPerson) {
+                if (!firstPerson) {         //Stop moving
                     moveForward = false;
+                    currentRobot.walkToIdle();
                 }
-                else {
+                else {                      //Stop aiming
                     aimUp = false;
                 }
                 break;
             case "KeyS":
-                if (!firstPerson) {
+                if (!firstPerson) {         //Stop moving
                     moveBackward = false;
+                    currentRobot.walkToIdle();
                 }
-                else {
+                else {                      //Stop aiming
                     aimDown = false;
                 }
                 break;
             case "KeyA":
-                turnLeft = false;
+                turnLeft = false;           //Stop moving or aiming
                 break;
             case "KeyD":
-                turnRight = false;
+                turnRight = false;          //Stop moving or aiming
                 break;
             case "Space":
-                charging = false;
+                charging = false;           //Stop charging
                 break;
         }
     });
 
     //Charge up the shot and then shoot
-    function chargeShot() {
+    function chargeShot() {                     //Increase a counter
         let power = 0;
         let interval = setInterval(() => {
             power += 0.1;
             console.log(power);
             if (!charging || power >= 10) {     //Stopped charging or max charge
+                camera = currentRobot.thirdPersonCamera;
                 clearInterval(interval);
                 
                 //Create new bullet and wait for next turn
                 const bulletBody = bullet(power);
                 bulletBody.addEventListener("collide", nextTurn);
-                shoot(currentRobot)
+                currentRobot.shoot();
             }
-        }, 14);
+        }, 12.5);
     }
 
     //Shoot a new bullet
@@ -236,7 +242,7 @@ function main() {
         bulletBody.addShape(bulletShape);
 
         //Break the shot vector over the three axes
-        const effectivePower = power * 2.2;             //Scale up the power (too weak)
+        const effectivePower = power * 2.5;             //Scale up the power (too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
         const projection = effectivePower * Math.cos(verticalAngle);     //Project the vector on the xz plane
@@ -258,7 +264,6 @@ function main() {
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         setTimeout(() => {                              //Change turn some time after the collision
-            aimToIdle(currentRobot);                    //Back to idle when turn ends
             currentRobotNumber = (currentRobotNumber + 1) % numRobots;
             currentRobot = robots[currentRobotNumber];
             camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
@@ -272,7 +277,7 @@ function main() {
     //Move the robot and copy the coordinates to its physics body
     function move() {
         //const currentRobotBody = robotBodies[currentRobotNumber];
-        const speed = 0.085;
+        const speed = 0.06;
         //How much the robot moves on x and z and how much it rotates
         const movementX = Math.sin(currentRobot.waist.rotation.y) * speed;
         const movementZ = Math.cos(currentRobot.waist.rotation.y) * speed;
@@ -282,22 +287,26 @@ function main() {
         if (moveForward) {
             currentRobot.waist.position.x += -movementX;
             currentRobot.waist.position.z += -movementZ;
-            //currentRobotBody.position.x += -movementX;
-            //currentRobotBody.position.z += -movementZ;
+            //currentRobot.body.position.x += -movementX;
+            //currentRobot.body.position.z += -movementZ;
+            currentRobot.body.position.copy(currentRobot.waist.position)
         }
         if (moveBackward) {
             currentRobot.waist.position.x += movementX;
             currentRobot.waist.position.z += movementZ;
-            //currentRobotBody.position.x += movementX;
-            //currentRobotBody.position.z += movementZ;
+            //currentRobot.body.position.x += movementX;
+            //currentRobot.body.position.z += movementZ;
+            currentRobot.body.position.copy(currentRobot.waist.position)
         }
         if (turnLeft) {
             currentRobot.waist.rotation.y += rotation;
-            //currentRobotBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.rotation.y);
+            //currentRobot.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.waist.rotation.y);
+            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
         if (turnRight) {
             currentRobot.waist.rotation.y += -rotation;
-            //currentRobotBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.rotation.y);
+            //currentRobot.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), currentRobot.waist.rotation.y);
+            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
     }
 
@@ -307,23 +316,21 @@ function main() {
         const rotation = 0.005;
 
         //No if-else so that you can use them together
-        if (aimUp) {
-            if (currentRobot.head.rotation.x < Math.PI / 2) {       //Max angle
-                currentRobot.head.rotation.x += rotation;
-                currentRobot.rightShoulder.rotation.x += rotation;
-            }
+        if (aimUp && currentRobot.head.rotation.x < Math.PI / 2) {      //Max angle
+            currentRobot.head.rotation.x += rotation;
+            currentRobot.rightShoulder.rotation.x += rotation;
         }
-        if (aimDown) {
-            if (currentRobot.head.rotation.x > -Math.PI / 6) {      //Min angle
-                currentRobot.head.rotation.x += -rotation;
-                currentRobot.rightShoulder.rotation.x += -rotation;
-            }
+        if (aimDown && currentRobot.head.rotation.x > -Math.PI / 6) {   //Min angle
+            currentRobot.head.rotation.x += -rotation;
+            currentRobot.rightShoulder.rotation.x += -rotation;
         }
         if (turnLeft) {
             currentRobot.waist.rotation.y += rotation;
+            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
         if (turnRight) {
             currentRobot.waist.rotation.y += -rotation;
+            currentRobot.body.quaternion.copy(currentRobot.waist.quaternion)
         }
     }
 
@@ -351,6 +358,10 @@ function main() {
         bullets.forEach((bullet, index) => {
             bullet.position.copy(bulletBodies[index].position);
             bullet.quaternion.copy(bulletBodies[index].quaternion);
+        });
+        robots.forEach((robot, index) => {
+            //robot.waist.position.copy(robotBodies[index].position);
+            //robot.waist.quaternion.copy(robotBodies[index].quaternion);
         });
 
         //The aspect of the cameras matches the aspect of the canvas (no distortions)

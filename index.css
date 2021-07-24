@@ -9,3 +9,7 @@ html, body {
     height: 100%;
     display: block;     /*Default inline (it may add white spaces)*/
 }
+
+#yosh {
+    top: 30px;
+}
