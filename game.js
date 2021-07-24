@@ -1,4 +1,4 @@
-import * as THREE from "./libs/three.module.js";    //r130
+//import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
@@ -11,11 +11,11 @@ const robots = [];
 let currentRobotNumber = 0;
 let currentRobot;
 
-const bullets = [];
-const bulletBodies = [];
+let bullets = [];
+let bulletBodies = [];
 
 //Creates new cameras
-function makeCamera(near = 1, far = 75) {
+function makeCamera(near = 0.3, far = 75) {
     const fov = 50;
     const aspect = 2;       //Canvas default
     return new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -209,6 +209,7 @@ function main() {
     //Charge up the shot and then shoot
     function chargeShot() {                     //Increase a counter
         let power = 0;
+
         let interval = setInterval(() => {
             power += 0.1;
             console.log(power);
@@ -272,6 +273,15 @@ function main() {
     //Go to next player's turn
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
+        for(var i=0; i < world.contacts.length; i++){   //Scan all contacts
+            var c = world.contacts[i];
+            robots.forEach((robot) => {                 //Check if contact is between the bullet and a robot
+                if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
+                    robot.hit();                        //Decrease health
+                }
+            });
+        }
+
         setTimeout(() => {                              //Change turn some time after the collision
             currentRobotNumber = (currentRobotNumber + 1) % numRobots;
             currentRobot = robots[currentRobotNumber];
@@ -327,11 +337,11 @@ function main() {
         const rotation = 0.005;
 
         //No if-else so that you can use them together
-        if (aimUp && currentRobot.head.rotation.x < Math.PI / 2) {      //Max angle
+        if (aimUp && currentRobot.head.rotation.x < Math.PI / 3) {      //Max angle
             currentRobot.head.rotation.x += rotation;
             currentRobot.rightShoulder.rotation.x += rotation;
         }
-        if (aimDown && currentRobot.head.rotation.x > -Math.PI / 6) {   //Min angle
+        if (aimDown && currentRobot.head.rotation.x > -Math.PI / 8) {   //Min angle
             currentRobot.head.rotation.x += -rotation;
             currentRobot.rightShoulder.rotation.x += -rotation;
         }
@@ -347,12 +357,12 @@ function main() {
     const renderer = new THREE.WebGLRenderer({canvas});
     renderer.shadowMap.enabled = true;
     
-    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        //cannonDebugRenderer.update();
+        cannonDebugRenderer.update();
 
         //Move the robot
         move();
@@ -367,6 +377,9 @@ function main() {
             bullet.position.copy(bulletBodies[index].position);
             bullet.quaternion.copy(bulletBodies[index].quaternion);
         });
+        //Don't iterate over bullets outside of map (remove them)
+        bullets = bullets.filter(bullet => bullet.position.y >= -8);
+        bulletBodies = bulletBodies.filter(body => body.position.y >= -8);
 
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
         if (resizeRendererToDisplaySize(renderer)) {

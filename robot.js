@@ -142,7 +142,7 @@ class Robot {
         this.thirdPersonCamera.position.set(0, 2.8, 5.5);
         this.thirdPersonCamera.lookAt(0, 0, -9);
 
-        this.firstPersonCamera = makeCamera(0.15);      //Head's child
+        this.firstPersonCamera = makeCamera(0.12);      //Head's child
         this.firstPersonCamera.position.set(0, 0, 0);
         this.firstPersonCamera.lookAt(0, 0, -1);
 
@@ -307,7 +307,7 @@ class Robot {
                 this.rightElbow.rotation,
                 this.leftShoulder.rotation])
             .to([{x: 0}, {x: 0}, {x: 0}, {x: 0},
-                {y: 0}, {x: Math.PI/2, z: -Math.PI/10}, {x: Math.PI/15}, {x: 0}], 150)
+                {y: 0}, {x: Math.PI/1.9, z: -Math.PI/10}, {x: Math.PI/15}, {x: 0}], 150)
             .easing(TWEEN.Easing.Quadratic.InOut).start();
     }
 
@@ -370,6 +370,11 @@ class Robot {
         if (this.currentTween) {
             this.currentTween.stop();
         }
+    }
+
+    hit() {
+        this.health--;
+        console.log(this.health);
     }
 }
 
