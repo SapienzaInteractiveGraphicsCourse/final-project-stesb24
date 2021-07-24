@@ -42,6 +42,8 @@ function main() {
         const robot = new Robot(i, scene, world);
         robots.push(robot);
         robotBodies.push(robot.body);
+
+        robot.idle();
     };
 
     //Detached camera looking from above

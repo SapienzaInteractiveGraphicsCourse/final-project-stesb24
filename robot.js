@@ -201,24 +201,24 @@ class Robot {
         this.still = true;          //Robot is not moving
     }
 
+    //Animations
     idleToWalk() {                  //Start walking (right leg goes forward) then walk()
         if (this.still) {
             this.stopTween();
             this.still = false;
 
             this.currentTween = new TWEEN.Tween([         //Right forward, left backward
-                this.rightLegPivot.rotation,
-                this.rightKnee.rotation,
-                this.leftLegPivot.rotation,
-                this.leftKnee.rotation,
-                this.rightShoulder.rotation,
-                this.leftShoulder.rotation])
-            .to([{x: Math.PI/6}, {x: -Math.PI/6}, {x: -Math.PI/12}, {x: -Math.PI/6},
-                {x: -Math.PI/8, z: Math.PI/20}, {x: Math.PI/8}], 180)
-            .easing(TWEEN.Easing.Linear.None).start();
+                    this.rightLegPivot.rotation,
+                    this.rightKnee.rotation,
+                    this.leftLegPivot.rotation,
+                    this.leftKnee.rotation,
+                    this.rightShoulder.rotation,
+                    this.leftShoulder.rotation])
+                .to([{x: Math.PI/6}, {x: -Math.PI/6}, {x: -Math.PI/12}, {x: -Math.PI/6},
+                    {x: -Math.PI/8, z: Math.PI/20}, {x: Math.PI/8}], 180)
+                .easing(TWEEN.Easing.Linear.None).start();
 
             this.currentTween.onComplete(() => {
-                this.currentTween.stop();
                 this.walk();
             });
         }
@@ -291,6 +291,9 @@ class Robot {
             .easing(TWEEN.Easing.Linear.None).start();
 
         this.still = true;
+        this.currentTween.onComplete(() => {
+            this.idle();
+        })
     }
 
     toAim() {
@@ -304,14 +307,16 @@ class Robot {
                 this.leftKnee.rotation,
                 this.torso.rotation,
                 this.rightShoulder.rotation,
-                this.rightElbow.rotation])
+                this.rightElbow.rotation,
+                this.leftShoulder.rotation])
             .to([{x: 0}, {x: 0}, {x: 0}, {x: 0},
-                {y: 0}, {x: Math.PI/2, z: -Math.PI/10}, {x: Math.PI/15}], 150)
+                {y: 0}, {x: Math.PI/2, z: -Math.PI/10}, {x: Math.PI/15}, {x: 0}], 150)
             .easing(TWEEN.Easing.Quadratic.InOut).start();
     }
 
     aimToIdle(time = 400, delay = 0) {
         this.stopTween();
+
         this.currentTween = new TWEEN.Tween([
                 this.torso.rotation,
                 this.rightShoulder.rotation,
@@ -319,17 +324,49 @@ class Robot {
                 this.head.rotation])
             .to([{y: 0}, {x: 0, z: Math.PI/20}, {x: Math.PI/15}, {x: 0}], time)
             .easing(TWEEN.Easing.Quadratic.Out).delay(delay).start();
+        
+        this.currentTween.onComplete(() => {
+            this.idle();
+        })
     }
 
     shoot() {
+        this.stopTween();
+
         const shootTween = new TWEEN.Tween([
-            this.torso.rotation,
-            this.rightShoulder.rotation,
-            this.rightElbow.rotation])
-        .to([{y: -Math.PI/12}, {z: Math.PI/8}, {x: Math.PI/2}], 150)
-        .easing(TWEEN.Easing.Exponential.Out).start();
+                this.torso.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation])
+            .to([{y: -Math.PI/12}, {z: Math.PI/8}, {x: Math.PI/2}], 150)
+            .easing(TWEEN.Easing.Exponential.Out).start();
 
         shootTween.onComplete(() => this.aimToIdle(540, 150))
+    }
+
+    idle() {
+        if (this.still) {
+            this.currentTween = new TWEEN.Tween([
+                    this.torso.position,
+                    this.leftLegPivot.rotation,
+                    this.leftKnee.rotation,
+                    this.rightLegPivot.rotation,
+                    this.rightKnee.rotation])
+                .to([{y: 0.48}, {x: Math.PI/20}, {x: -Math.PI/10}, {x: Math.PI/20}, {x: -Math.PI/10}], 1200)
+                .easing(TWEEN.Easing.Linear.None);
+            const originalPosition = new TWEEN.Tween([
+                    this.torso.position,
+                    this.leftLegPivot.rotation,
+                    this.leftKnee.rotation,
+                    this.rightLegPivot.rotation,
+                    this.rightKnee.rotation])
+                .to([{y: 0.5}, {x: 0}, {x: 0}, {x: 0}, {x: 0}], 1200)
+                .easing(TWEEN.Easing.Linear.None);
+            
+            this.currentTween.chain(originalPosition);
+            originalPosition.chain(this.currentTween);
+
+            this.currentTween.start();
+        }
     }
 
     stopTween() {
