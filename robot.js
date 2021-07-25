@@ -197,6 +197,7 @@ class Robot {
         this.body.addShape(boxShape);
         this.body.position.set(initialX, halfExtentsY, initialZ);
         this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), initialAngle);
+        this.body.angularDamping = 1;
 
         scene.add(this.waist);
         world.add(this.body);

@@ -1,4 +1,4 @@
-import * as THREE from "./libs/three.module.js";    //r130
+//import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
@@ -51,7 +51,7 @@ function main() {
 
     //First robot
     currentRobot = robots[0];
-    currentRobot.body.mass = 10;                      //The robot that acts must be affected by all physics (collides)
+    currentRobot.body.mass = 70;                      //The robot that acts must be affected by all physics (collides)
     currentRobot.body.type = CANNON.Body.DYNAMIC;
     currentRobot.body.updateMassProperties();
 
@@ -286,29 +286,32 @@ function main() {
             });
         }
 
-        if (robots.every(robot => robot.team == 0)) {                       //Last player remaining is the winner
+        //Last team remaining is the winner
+        if (robots.every(robot => robot.team == 0)) {
             gameOver();
             console.log("Red team wins");
         }
-        if (robots.every(robot => robot.team == 1)) {
+        else if (robots.every(robot => robot.team == 1)) {
             gameOver();
             console.log("Blue team wins");
         }
+        //Change turn some time after the collision
+        else {
+            setTimeout(() => {
+                currentRobotNumber = (currentRobotNumber + 1) % numRobots;
+                currentRobot = robots[currentRobotNumber];
+                camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
 
-        setTimeout(() => {                              //Change turn some time after the collision
-            currentRobotNumber = (currentRobotNumber + 1) % numRobots;
-            currentRobot = robots[currentRobotNumber];
-            camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
+                //The new robot becomes dynamic
+                currentRobot.body.mass = 70;
+                currentRobot.body.type = CANNON.Body.DYNAMIC;
+                currentRobot.body.updateMassProperties();
 
-            //The new robot becomes dynamic
-            currentRobot.body.mass = 10;
-            currentRobot.body.type = CANNON.Body.DYNAMIC;
-            currentRobot.body.updateMassProperties();
-
-            global = false;                             //Reset flags
-            firstPerson = false;
-            waitForCollision = false;
-        }, 1500);
+                global = false;                             //Reset flags
+                firstPerson = false;
+                waitForCollision = false;
+            }, 1500);
+        }
     }
 
     //Move the robot (applying forces in case)
@@ -374,19 +377,19 @@ function main() {
     const renderer = new THREE.WebGLRenderer({canvas});
     renderer.shadowMap.enabled = true;
     
-    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        //cannonDebugRenderer.update();
+        cannonDebugRenderer.update();
 
         //Move the robot
         move();
         aim();
         TWEEN.update();
 
-        //We move the body but want the mesh's rotation
+        //We move the body but want the rotation we give to the mesh
         currentRobot.body.quaternion.copy(currentRobot.waist.quaternion);
 
         //Copy coordinates from Cannon to Three for each bullet
