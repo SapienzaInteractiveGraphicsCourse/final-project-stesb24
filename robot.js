@@ -138,10 +138,10 @@ class Robot {
         this.rightHand = new THREE.Object3D()           //This is used to know where the bullet is shot from
         this.rightHand.position.y = -armHeight / 2 - 0.22;
 
-        //Head (waist's child)
+        //Head (torso's child)
         const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
         this.head = new THREE.Mesh(headGeometry, material);
-        this.head.position.y = torsoHeight + headRadius - offset;
+        this.head.position.y = torsoHeight / 2 + headRadius - offset;
 
         //Cameras
         this.thirdPersonCamera = makeCamera();          //Waist's child
@@ -178,7 +178,7 @@ class Robot {
         this.rightElbow.add(this.rightLowerArm);
         this.rightLowerArm.add(this.rightHand);
 
-        this.waist.add(this.head);
+        this.torso.add(this.head);
 
         this.head.add(this.firstPersonCamera);
 
@@ -210,11 +210,10 @@ class Robot {
         this.health--;
         console.log(this.health);
         if (this.health > 0) {
-            this.hit();
             return false;
         }
         else {
-            this.death();
+            this.death();         //Death animation
             return true;
         }
     }
@@ -387,18 +386,39 @@ class Robot {
         }
     }
 
+    death() {
+        this.stopTween();
+
+        this.currentTween = new TWEEN.Tween([
+                this.waist.position,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation])
+            .to([{y: 0.95}, {x: Math.PI/10}, {x: -Math.PI/5}, {x: Math.PI/10}, {x: -Math.PI/5}], 850)
+            .easing(TWEEN.Easing.Linear.None);
+        const goDown = new TWEEN.Tween([
+                this.torso.rotation,
+                this.head.position])
+            .to([{x: -Math.PI/10}, {y: "-0.1", z: "-0.25"}], 400)
+            .easing(TWEEN.Easing.Bounce.Out).delay(200);
+        const moveArms = new TWEEN.Tween([
+                this.leftShoulder.rotation,
+                this.leftElbow.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation])
+            .to([{x: Math.PI/9, z: 0}, {x: 0}, {x: Math.PI/9, z: 0}, {x: 0}], 900)
+            .easing(TWEEN.Easing.Bounce.Out);
+
+        this.currentTween.chain(goDown);
+        goDown.onStart(() => moveArms.start());
+        this.currentTween.start();
+    }
+
     stopTween() {
         if (this.currentTween) {
             this.currentTween.stop();
         }
-    }
-
-    hit() {
-
-    }
-
-    death() {
-
     }
 }
 
