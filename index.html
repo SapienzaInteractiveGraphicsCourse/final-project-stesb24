@@ -2,14 +2,21 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Worms clone</title>
+        <title>Woborms</title>
         <link rel="stylesheet" type="text/css" href="./index.css">
     </head>
 
     <body>
-        <canvas id="c"></canvas>
+        <!--<script type="text/javascript" src="./libs/three124.js"></script>-->
         <script type="text/javascript" src="./libs/cannon.js"></script>
-        <script tyoe="text/javascript" src="./libs/tween.umd.js"></script>
-        <script type="module" src="./game.js"></script>
+        <!--<script type="text/javascript" src="./libs/CannonDebugRenderer.js"></script>-->
+        <script type="text/javascript" src="./libs/tween.umd.js"></script>
+        <!--<script type="module" src="./game.js"></script>-->
+        <script type="module">
+            import {menu} from "./menu.js";
+            window.onload = function() {
+                menu();
+            }
+        </script>
     </body>
 </html>

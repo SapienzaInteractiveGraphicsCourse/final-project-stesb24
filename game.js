@@ -23,6 +23,14 @@ function makeCamera(near = 0.3, far = 75) {
 
 //Set up and handle the scene graph (lights, cameras and objects) and physics
 function main() {
+    //Prepare html after coming from the menu
+    document.body.innerHTML = "";
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("id", "c");
+    const renderer = new THREE.WebGLRenderer({canvas});
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(canvas);
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("skyblue");
 
@@ -372,10 +380,6 @@ function main() {
     function gameOver() {
 
     }
-
-    const canvas = document.querySelector("#c");
-    const renderer = new THREE.WebGLRenderer({canvas});
-    renderer.shadowMap.enabled = true;
     
     //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
@@ -421,6 +425,6 @@ function main() {
     requestAnimationFrame(render);
 }
 
-main();
+//main();
 
-export {makeCamera};
+export {main, makeCamera};
