@@ -15,6 +15,7 @@ const torsoDepth = 0.45;
 //Head
 const headRadius = 0.35;
 const headSegments = 15;
+const offset = 0.1;
 //Legs
 const legWidth = 0.25;
 const legHeight = 0.5;
@@ -32,8 +33,8 @@ const sphereRadius = 0.135;
 const sphereSegments = 10;
 
 class Robot {
-    //This class contains: currentTween, still,
-    //health, body, waist, torso, head,
+    //This class contains: health, team, currentTween, still,
+    //body, waist, torso, head,
     //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
     //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
     //leftShoulder, leftUpperArm, leftElbow, leftLowerArm,
@@ -42,13 +43,17 @@ class Robot {
 
     constructor(robotNumber, scene, world) {
         this.health = 3;
+        this.team;
 
         const material = new THREE.MeshPhongMaterial();
+        const sphereMaterial = new THREE.MeshPhongMaterial({color: "#474544"});
         if (robotNumber % 2 == 0) {           //Even robot = red team; odd robot = blue team
             material.color.set("red");
+            this.team = 0;
         }
         else {
             material.color.set("blue");
+            this.team = 1;
         }
 
         //Geometries that are reused
@@ -77,7 +82,7 @@ class Robot {
         this.leftUpperLeg = new THREE.Mesh(legGeometry, material);
         this.leftUpperLeg.position.y = -legHeight / 2;
 
-        this.leftKnee = new THREE.Mesh(sphereGeometry, material);
+        this.leftKnee = new THREE.Mesh(sphereGeometry, sphereMaterial);
         this.leftKnee.position.y = -legHeight / 2;
 
         this.leftLowerLeg = new THREE.Mesh(legGeometry, material);
@@ -90,14 +95,14 @@ class Robot {
         this.rightUpperLeg = new THREE.Mesh(legGeometry, material);
         this.rightUpperLeg.position.y = -legHeight / 2;
 
-        this.rightKnee = new THREE.Mesh(sphereGeometry, material);
+        this.rightKnee = new THREE.Mesh(sphereGeometry, sphereMaterial);
         this.rightKnee.position.y = -legHeight / 2;
 
         this.rightLowerLeg = new THREE.Mesh(legGeometry, material);
         this.rightLowerLeg.position.y = -legHeight / 2;
 
         //Left arm (torso's child)
-        this.leftShoulder = new THREE.Mesh(sphereGeometry, material);
+        this.leftShoulder = new THREE.Mesh(sphereGeometry, sphereMaterial);
         this.leftShoulder.position.x = -torsoWidth / 2 - sphereRadius + 0.05;
         this.leftShoulder.position.y = torsoHeight / 2 - 0.075;
         this.leftShoulder.rotation.z = -Math.PI / 20;
@@ -105,7 +110,7 @@ class Robot {
         this.leftUpperArm = new THREE.Mesh(armGeometry, material);
         this.leftUpperArm.position.y = -armHeight / 2;
 
-        this.leftElbow = new THREE.Mesh(sphereGeometry, material);
+        this.leftElbow = new THREE.Mesh(sphereGeometry, sphereMaterial);
         this.leftElbow.position.y = -armHeight / 2;
         this.leftElbow.rotation.x = Math.PI / 15;
 
@@ -113,7 +118,7 @@ class Robot {
         this.leftLowerArm.position.y = -armHeight / 2;
 
         //Right Arm (torso's child)
-        this.rightShoulder = new THREE.Mesh(sphereGeometry, material);
+        this.rightShoulder = new THREE.Mesh(sphereGeometry, sphereMaterial);
         this.rightShoulder.position.x = torsoWidth / 2 + sphereRadius - 0.05;
         this.rightShoulder.position.y = torsoHeight / 2 - 0.075;
         this.rightShoulder.rotation.z = Math.PI / 20;
@@ -121,12 +126,13 @@ class Robot {
         this.rightUpperArm = new THREE.Mesh(armGeometry, material);
         this.rightUpperArm.position.y = -armHeight / 2;
 
-        this.rightElbow = new THREE.Mesh(sphereGeometry, material);
+        this.rightElbow = new THREE.Mesh(sphereGeometry, sphereMaterial);
         this.rightElbow.position.y = -armHeight / 2;
         this.rightElbow.rotation.x = Math.PI / 15;
 
+        const cannonMaterial = new THREE.MeshPhongMaterial({color: "#1f1d1d"});
         const rightLowerArmGeometry = new THREE.CylinderGeometry(cannonRadius, cannonRadius, cannonHeight, cannonSegments);
-        this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, material);
+        this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, cannonMaterial);
         this.rightLowerArm.position.y = -armHeight / 2;
 
         this.rightHand = new THREE.Object3D()           //This is used to know where the bullet is shot from
@@ -135,7 +141,7 @@ class Robot {
         //Head (waist's child)
         const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
         this.head = new THREE.Mesh(headGeometry, material);
-        this.head.position.y = torsoHeight + headRadius - 0.1;
+        this.head.position.y = torsoHeight + headRadius - offset;
 
         //Cameras
         this.thirdPersonCamera = makeCamera();          //Waist's child
@@ -184,11 +190,12 @@ class Robot {
             }
         });
 
-        const halfExtents = new CANNON.Vec3(torsoWidth / 2, torsoHeight, torsoDepth / 2);
+        const halfExtentsY = (2*legHeight + torsoHeight + 2*headRadius - offset) / 2;
+        const halfExtents = new CANNON.Vec3((torsoWidth + 2*armWidth)/ 2, halfExtentsY, torsoDepth / 2);
         const boxShape = new CANNON.Box(halfExtents);
         this.body = new CANNON.Body({mass: 0});
         this.body.addShape(boxShape);
-        this.body.position.set(initialX, initialY, initialZ);
+        this.body.position.set(initialX, halfExtentsY, initialZ);
         this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), initialAngle);
 
         scene.add(this.waist);

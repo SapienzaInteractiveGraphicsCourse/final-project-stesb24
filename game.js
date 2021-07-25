@@ -275,7 +275,7 @@ function main() {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
         for(var i=0; i < world.contacts.length; i++){   //Scan all contacts
             var c = world.contacts[i];
-            robots.forEach((robot) => {                 //Check if contact is between the bullet and a robot
+            robots.forEach(robot => {                 //Check if contact is between the bullet and a robot
                 if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
                     if (robot.decreaseHealth()) {       //Remove the dead robot
                         const index = robots.indexOf(robot);
@@ -286,9 +286,13 @@ function main() {
             });
         }
 
-        //TO CORRECT!
-        if (numRobots == 1) {                       //Last player remaining is the winner
+        if (robots.every(robot => robot.team == 0)) {                       //Last player remaining is the winner
             gameOver();
+            console.log("Red team wins");
+        }
+        if (robots.every(robot => robot.team == 1)) {
+            gameOver();
+            console.log("Blue team wins");
         }
 
         setTimeout(() => {                              //Change turn some time after the collision
@@ -323,13 +327,13 @@ function main() {
 
         if (moveBackward) {
             currentRobot.body.velocity.set(speedX, 0, speedZ);                  //Move body
-            currentRobot.waist.position.set(currentRobot.body.position.x,       //Move mesh accordingly
-                currentRobot.body.position.y, currentRobot.body.position.z);
+            currentRobot.waist.position.x = currentRobot.body.position.x;       //Move mesh accordingly
+            currentRobot.waist.position.z = currentRobot.body.position.z;
         }
         if (moveForward) {
             currentRobot.body.velocity.set(-speedX, 0, -speedZ);                //Move body
-            currentRobot.waist.position.set(currentRobot.body.position.x,       //Move mesh accordingly
-                currentRobot.body.position.y, currentRobot.body.position.z);
+            currentRobot.waist.position.x = currentRobot.body.position.x;       //Move mesh accordingly
+            currentRobot.waist.position.z = currentRobot.body.position.z;
         }
 
         if (turnLeft && !firstPerson) {
