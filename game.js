@@ -1,4 +1,4 @@
-//import * as THREE from "./libs/three.module.js";    //r130
+import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {resizeRendererToDisplaySize} from "./utils.js";
@@ -377,12 +377,12 @@ function main() {
     const renderer = new THREE.WebGLRenderer({canvas});
     renderer.shadowMap.enabled = true;
     
-    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        cannonDebugRenderer.update();
+        //cannonDebugRenderer.update();
 
         //Move the robot
         move();
