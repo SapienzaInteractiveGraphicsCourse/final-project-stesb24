@@ -12,19 +12,19 @@ function menu() {
     subTitle.innerText = "A game inspired by the Worms series by Team17";
     document.body.appendChild(subTitle);
 
-    const newGame = document.createElement("button");
-    newGame.setAttribute("class", "button-class");
-    newGame.innerText = "New game";
-    newGame.onclick = main;
-    document.body.appendChild(newGame);
+    const newGameButton = document.createElement("button");
+    newGameButton.setAttribute("class", "button-class");
+    newGameButton.innerText = "New game";
+    newGameButton.onclick = main;
+    document.body.appendChild(newGameButton);
 
-    const howToPlay = document.createElement("button");
-    howToPlay.setAttribute("class", "button-class");
-    howToPlay.innerText = "How to play";
-    howToPlay.style.backgroundColor = "blue";
-    howToPlay.style.marginBottom = 0;
-    howToPlay.onclick = instructions;
-    document.body.appendChild(howToPlay);
+    const howToPlayButton = document.createElement("button");
+    howToPlayButton.setAttribute("class", "button-class");
+    howToPlayButton.innerText = "How to play";
+    howToPlayButton.style.backgroundColor = "blue";
+    howToPlayButton.style.marginBottom = 0;
+    howToPlayButton.onclick = instructions;
+    document.body.appendChild(howToPlayButton);
 }
 
 export {menu};

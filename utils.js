@@ -1,3 +1,10 @@
+//Creates new cameras
+function makeCamera(near = 0.3, far = 75) {
+    const fov = 50;
+    const aspect = 2;       //Canvas default
+    return new THREE.PerspectiveCamera(fov, aspect, near, far);
+}
+
 function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
     const width = canvas.clientWidth;
@@ -11,4 +18,4 @@ function resizeRendererToDisplaySize(renderer) {
     return needResize;
 }
 
-export {resizeRendererToDisplaySize};
+export {makeCamera, resizeRendererToDisplaySize};

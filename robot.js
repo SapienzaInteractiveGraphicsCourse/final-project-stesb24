@@ -1,5 +1,5 @@
 import * as THREE from "./libs/three.module.js";
-import {makeCamera} from "./game.js";
+import {makeCamera} from "./utils.js";
 
 //i-th value is the initial (x, z) position and angle of the i-th robot
 const initialCoordinates = [
@@ -15,7 +15,7 @@ const torsoDepth = 0.45;
 //Head
 const headRadius = 0.35;
 const headSegments = 15;
-const offset = 0.1;
+const headOffset = 0.1;
 //Legs
 const legWidth = 0.25;
 const legHeight = 0.5;
@@ -141,7 +141,7 @@ class Robot {
         //Head (torso's child)
         const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
         this.head = new THREE.Mesh(headGeometry, material);
-        this.head.position.y = torsoHeight / 2 + headRadius - offset;
+        this.head.position.y = torsoHeight / 2 + headRadius - headOffset;
 
         //Cameras
         this.thirdPersonCamera = makeCamera();          //Waist's child
@@ -190,12 +190,14 @@ class Robot {
             }
         });
 
-        const halfExtentsY = (2*legHeight + torsoHeight + 2*headRadius - offset) / 2;
-        const halfExtents = new CANNON.Vec3((torsoWidth + 2*armWidth)/ 2, halfExtentsY, torsoDepth / 2);
+        const halfX = (torsoWidth + 2*armWidth) / 2;
+        const halfY = (2*legHeight + torsoHeight + 2*headRadius - headOffset) / 2;
+        const halfZ = torsoDepth / 2;
+        const halfExtents = new CANNON.Vec3(halfX, halfY, halfZ);
         const boxShape = new CANNON.Box(halfExtents);
         this.body = new CANNON.Body({mass: 0});
         this.body.addShape(boxShape);
-        this.body.position.set(initialX, halfExtentsY, initialZ);
+        this.body.position.set(initialX, halfY, initialZ);
         this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), initialAngle);
         this.body.angularDamping = 1;
 
@@ -209,12 +211,8 @@ class Robot {
     decreaseHealth() {            //Returns true if the robot dies
         this.health--;
         console.log(this.health);
-        if (this.health > 0) {
-            return false;
-        }
-        else {
+        if (this.health <= 0) {
             this.death();         //Death animation
-            return true;
         }
     }
 

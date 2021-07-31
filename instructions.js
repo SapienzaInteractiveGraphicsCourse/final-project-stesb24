@@ -11,8 +11,8 @@ function instructions() {
 
     const intro = document.createElement("subtitle");
     intro.innerHTML =
-    "Woborms is a two-player game, where each player controls a team of robots; the players alternate their turns, " +
-    "each time controlling one of their robots. Your objective is to destroy the enemy team's robots!" +
+    "Woborms is a two-player game where each player controls a team of robots; players alternate their turns, " +
+    "each time giving commands to one of their robots. Your objective is to destroy the enemy team's robots!" +
     "<br><br>Here are the commands:"
     document.body.appendChild(intro);
 
@@ -29,18 +29,19 @@ function instructions() {
     const end = document.createElement("subtitle");
     end.innerHTML =
     "After shooting, your turn ends and you can't act anymore (but you can still look from above); the enemy team's " +
-    "turn starts after a little while.<br><br>Every robot has three lives, and each time they are hit by a bullet " +
-    "they lose one life. Hit a robot three times to deactivate it, but try not to shoot to your own robots!<br>" +
-    "Be careful: bullets won't damage any robot after hitting something, so you should aim straight to a robot. " +
+    "turn will start after a little while.<br><br>Each robot has three lives, and every time they are hit by a bullet " +
+    "they lose one life. Hit a robot three times to deactivate it, but try not to shoot at your own robots!<br>" +
+    "Be careful: bullets won't deal damage after hitting something, so you should aim straight to a robot. " +
     "Bounces are not valid!";
     document.body.appendChild(end);
 
-    const back = document.createElement("button");
-    back.setAttribute("class", "button-class");
-    back.innerText = "Back";
-    back.style.marginBottom = 0;
-    back.onclick = menu;
-    document.body.appendChild(back);
+    const backButton = document.createElement("button");
+    backButton.setAttribute("class", "button-class");
+    backButton.innerText = "Back";
+    backButton.style.backgroundColor = "purple";
+    backButton.style.marginBottom = 0;
+    backButton.onclick = menu;
+    document.body.appendChild(backButton);
 }
 
 export {instructions};

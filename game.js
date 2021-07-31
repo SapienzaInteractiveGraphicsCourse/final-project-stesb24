@@ -1,7 +1,7 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
-import {resizeRendererToDisplaySize} from "./utils.js";
+import {makeCamera, resizeRendererToDisplaySize} from "./utils.js";
 
 const numTeams = 2;
 const robotsPerTeam = 4;
@@ -14,14 +14,7 @@ let currentRobot;
 let bullets = [];
 let bulletBodies = [];
 
-//Creates new cameras
-function makeCamera(near = 0.3, far = 75) {
-    const fov = 50;
-    const aspect = 2;       //Canvas default
-    return new THREE.PerspectiveCamera(fov, aspect, near, far);
-}
-
-//Set up and handle the scene graph (lights, cameras and objects) and physics
+//Set up and handle the scene graph (lights, cameras and objects) and physics, handle the gameplay
 function main() {
     //Prepare html after coming from the menu
     document.body.innerHTML = "";
@@ -39,7 +32,7 @@ function main() {
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
-    world.defaultContactMaterial.friction = 0;
+    //world.defaultContactMaterial.friction = 0;
 
     //Create all lights and objects
     createMap(scene, world);
@@ -47,19 +40,19 @@ function main() {
     //Create the robots and their cameras
     for (let i=0; i < numRobots; i++) {
         const robot = new Robot(i, scene, world);
-        robots.push(robot);
-
         robot.idle();
+
+        robots.push(robot);
     };
 
     //Detached camera looking from above
-    const globalCamera = makeCamera(40, 55);
+    const globalCamera = makeCamera(25, 55);
     globalCamera.position.y = 52;
     globalCamera.lookAt(0, 0, 0);
 
     //First robot
     currentRobot = robots[0];
-    currentRobot.body.mass = 70;                      //The robot that acts must be affected by all physics (collides)
+    currentRobot.body.mass = 70;        //The robot that acts must be affected by all physics (collides with objects)
     currentRobot.body.type = CANNON.Body.DYNAMIC;
     currentRobot.body.updateMassProperties();
 
@@ -80,9 +73,9 @@ function main() {
     let charging = false;               //True = charging the shot
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", e => {
         switch (e.code) {
-            //Move or shoot only if you haven't shot yet (!waitForCollision)
+            //Move or shoot only if you haven't shot yet (= !waitForCollision)
             case "KeyW":
                 if (!waitForCollision) {
                     if (!firstPerson) {         //Move
@@ -128,7 +121,6 @@ function main() {
                     aimUp = false;
                     aimDown = false;
 
-                    charging = true;
                     chargeShot();
                 }
                 break;
@@ -181,8 +173,7 @@ function main() {
         }
     });
 
-    document.addEventListener("keyup", (e) => {
-        //Stop moving
+    document.addEventListener("keyup", e => {
         switch (e.code) {
             case "KeyW":
                 if (!firstPerson) {         //Stop moving
@@ -215,8 +206,9 @@ function main() {
     });
 
     //Charge up the shot and then shoot
-    function chargeShot() {                     //Increase a counter
+    function chargeShot() {                     //Increases a counter
         let power = 0;
+        charging = true;
 
         let interval = setInterval(() => {
             power += 0.1;
@@ -230,12 +222,12 @@ function main() {
                 currentRobot.body.type = CANNON.Body.STATIC;
                 currentRobot.body.updateMassProperties();
                 
-                //Create new bullet and wait for next turn
+                //Create new bullet, shoot and wait for next turn
                 const bulletBody = bullet(power);
                 bulletBody.addEventListener("collide", nextTurn);
                 currentRobot.shoot();
             }
-        }, 12.5);
+        }, 13.5);
     }
 
     //Shoot a new bullet
@@ -260,7 +252,7 @@ function main() {
         bulletBody.addShape(bulletShape);
 
         //Break the shot vector over the three axes
-        const effectivePower = power * 2.5;             //Scale up the power (too weak)
+        const effectivePower = power * 2.5;             //Scale up the power (or else too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
         const powerY = effectivePower * Math.sin(verticalAngle);
@@ -281,11 +273,12 @@ function main() {
     //Go to next player's turn
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
-        for(var i=0; i < world.contacts.length; i++){   //Scan all contacts
-            var c = world.contacts[i];
-            robots.forEach(robot => {                 //Check if contact is between the bullet and a robot
+        for (let i=0; i < world.contacts.length; i++){  //Scan all contacts
+            let c = world.contacts[i];
+            robots.forEach(robot => {                   //Check if contact is between the bullet and a robot
                 if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
-                    if (robot.decreaseHealth()) {       //Remove the dead robot
+                    robot.decreaseHealth();
+                    if (robot.health <= 0) {            //Remove the dead robot
                         const index = robots.indexOf(robot);
                         robots.splice(index, 1);
                         numRobots--;
@@ -318,7 +311,7 @@ function main() {
                 global = false;                             //Reset flags
                 firstPerson = false;
                 waitForCollision = false;
-            }, 1500);
+            }, 1750);
         }
     }
 
@@ -424,7 +417,5 @@ function main() {
 
     requestAnimationFrame(render);
 }
-
-//main();
 
 export {main, makeCamera};
