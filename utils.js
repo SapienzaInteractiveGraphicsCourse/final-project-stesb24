@@ -1,3 +1,5 @@
+import * as THREE from "./libs/three.module.js";
+
 //Creates new cameras
 function makeCamera(near = 0.3, far = 75) {
     const fov = 50;
