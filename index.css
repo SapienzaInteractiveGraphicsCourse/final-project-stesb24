@@ -22,7 +22,7 @@ t {                     /*Menu title*/
     display: block;
 }
 
-subtitle {              /*Also for the rules*/
+subtitle {              /*Also used for the rules*/
     margin-bottom: 5px;
     margin-left: 20px;
     margin-right: 20px;
@@ -49,4 +49,36 @@ subtitle {              /*Also for the rules*/
     font-weight: bold;
     color: white;
     display: block;
+}
+
+#container {            /*"General" div that contains the divs for the gui*/
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;      /*The div and all the divs it contains are all hidden*/
+}
+
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 63px;
+    font-weight: bold;
+    color: black;
+}
+
+#power {                    /*Used for span instead of div (it uses one line)*/
+    position: relative;     /*It doesn't move when more digits appear*/
+    top: 90%;
+    left: 38%;
+    transform: translate(-50%,-50%);
+    font-size: 50px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    color: goldenrod;
 }

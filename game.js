@@ -3,6 +3,8 @@ import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {makeCamera, resizeRendererToDisplaySize} from "./utils.js";
 
+let renderer;
+
 const numTeams = 2;
 const robotsPerTeam = 4;
 let numRobots = numTeams * robotsPerTeam;
@@ -14,15 +16,28 @@ let currentRobot;
 let bullets = [];
 let bulletBodies = [];
 
-//Set up and handle the scene graph (lights, cameras and objects) and physics, handle the gameplay
-function main() {
-    //Prepare html after coming from the menu
+//Prepare html after coming from the menu
+function setUpDocument() {
     document.body.innerHTML = "";
+
     const canvas = document.createElement("canvas");
     canvas.setAttribute("id", "c");
-    const renderer = new THREE.WebGLRenderer({canvas});
-    renderer.shadowMap.enabled = true;
+
+    const div = document.createElement("div");          //Contains the various parts of gui
+    div.setAttribute("id", "container");
+    div.innerHTML = "<div id=crosshair>+</div>" + 
+                    "<span id=power>POWER: 0</span>";
+
     document.body.appendChild(canvas);
+    document.body.appendChild(div);
+
+    renderer = new THREE.WebGLRenderer({canvas});
+    renderer.shadowMap.enabled = true;
+}
+
+//Set up and handle the scene graph (lights, cameras and objects) and physics, handle the gameplay
+function main() {
+    setUpDocument();
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("skyblue");
@@ -129,6 +144,7 @@ function main() {
                 if (!global) {          //Switch to global camera
                     if (firstPerson) {      //If aiming, go back to idle
                         currentRobot.aimToIdle();
+                        document.querySelector("#container").style.display = "none"     //Remove gui
                     }
                     global = true;
                     firstPerson = false;
@@ -155,6 +171,9 @@ function main() {
                         //Interrupted animations could have left the head looking somewhere else
                         currentRobot.head.rotation.x = 0;
                         camera = currentRobot.firstPersonCamera;
+
+                        //Display gui
+                        document.querySelector("#container").style.display = "block"
                     }
                     else {                  //Switch back to third person camera
                         //Reset all aiming flags
@@ -167,6 +186,9 @@ function main() {
                         firstPerson = false;
                         global = false;
                         camera = currentRobot.thirdPersonCamera;
+
+                        //Remove gui
+                        document.querySelector("#container").style.display = "none"
                     }
                 }
                 break;
@@ -208,12 +230,18 @@ function main() {
     //Charge up the shot and then shoot
     function chargeShot() {                     //Increases a counter
         let power = 0;
+        let approximation;                      //Number displayed on the gui (one decimal digit)
         charging = true;
 
         let interval = setInterval(() => {
             power += 0.1;
-            console.log(power);
+            approximation = Math.round(power * 100) / 100;
+            document.querySelector("#power").innerHTML = "POWER: " + approximation;
+
             if (!charging || power >= 10) {     //Stopped charging or max charge
+                //Remove gui
+                document.querySelector("#container").style.display = "none"
+
                 camera = currentRobot.thirdPersonCamera;
                 clearInterval(interval);        //Stop loop
 
@@ -226,6 +254,8 @@ function main() {
                 const bulletBody = bullet(power);
                 bulletBody.addEventListener("collide", nextTurn);
                 currentRobot.shoot();
+
+                document.querySelector("#power").innerHTML = "POWER: " + 0;
             }
         }, 13.5);
     }
@@ -273,7 +303,8 @@ function main() {
     //Go to next player's turn
     function nextTurn(e) {
         this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
-        for (let i=0; i < world.contacts.length; i++){  //Scan all contacts
+        
+        for (let i=0; i < world.contacts.length; i++) { //Scan all contacts
             let c = world.contacts[i];
             robots.forEach(robot => {                   //Check if contact is between the bullet and a robot
                 if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
@@ -311,7 +342,7 @@ function main() {
                 global = false;                             //Reset flags
                 firstPerson = false;
                 waitForCollision = false;
-            }, 1750);
+            }, 1800);
         }
     }
 
