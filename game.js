@@ -16,6 +16,8 @@ let currentRobot;
 let bullets = [];
 let bulletBodies = [];
 
+const turnTime = 15;
+
 //Prepare html after coming from the menu
 function setUpDocument() {
     document.body.innerHTML = "";
@@ -28,8 +30,13 @@ function setUpDocument() {
     div.innerHTML = "<div id=crosshair>+</div>" + 
                     "<span id=power>POWER: 0</span>";
 
+    const timer = document.createElement("div");
+    timer.setAttribute("id", "timer");
+    timer.innerHTML = turnTime;
+
     document.body.appendChild(canvas);
     document.body.appendChild(div);
+    document.body.appendChild(timer);
 
     renderer = new THREE.WebGLRenderer({canvas});
     renderer.shadowMap.enabled = true;
@@ -73,7 +80,8 @@ function main() {
 
     let camera = currentRobot.thirdPersonCamera;      //Start from first robot's camera
 
-    //Keyboard controls
+    //KEYBOARD CONTROLS AND TURN HANDLING
+
     let moveForward = false;
     let moveBackward = false;
     let turnLeft = false;
@@ -124,7 +132,7 @@ function main() {
                 }
                 break;
             case "Space":                       //Charge
-                if (!waitForCollision && firstPerson) {
+                if (!waitForCollision && firstPerson) {     //While aiming
                     //Stop acting
                     waitForCollision = true;
 
@@ -136,24 +144,27 @@ function main() {
                     aimUp = false;
                     aimDown = false;
 
+                    charging = true;
                     chargeShot();
                 }
                 break;
             //Camera handling
             case "KeyE":                //Global camera
-                if (!global) {          //Switch to global camera
-                    if (firstPerson) {      //If aiming, go back to idle
-                        currentRobot.aimToIdle();
-                        document.querySelector("#container").style.display = "none"     //Remove gui
+                if (!charging) {                //Stay in first person while charging
+                    if (!global) {              //Switch to global camera
+                        if (firstPerson) {      //If aiming, go back to idle
+                            currentRobot.aimToIdle();
+                            document.querySelector("#container").style.display = "none"     //Remove gui
+                        }
+                        global = true;
+                        firstPerson = false;
+                        camera = globalCamera;
                     }
-                    global = true;
-                    firstPerson = false;
-                    camera = globalCamera;
-                }
-                else {                  //Switch back to third person camera
-                    global = false;
-                    firstPerson = false;
-                    camera = currentRobot.thirdPersonCamera;
+                    else {                  //Switch back to third person camera
+                        global = false;
+                        firstPerson = false;
+                        camera = currentRobot.thirdPersonCamera;
+                    }
                 }
                 break;
             case "KeyQ":                //First person camera
@@ -227,11 +238,51 @@ function main() {
         }
     });
 
+    countdown();
+
+    //FUNCTIONS USED DURING THE TURN
+
+    function countdown() {
+        let time = turnTime;
+
+        let interval = setInterval(() => {
+            if (charging) {                     //Start shooting in time
+                clearInterval(interval);        //Delete the countdown
+                return;                         //Exit from the cycle now (avoid further iterations)
+            }
+
+            time -= 1;
+            document.querySelector("#timer").innerHTML = time;
+
+            if (time <= 0) {                    //Time's up
+                clearInterval(interval);
+
+                waitForCollision = true;        //Don't take other commands
+                if (firstPerson) {
+                    camera = currentRobot.thirdPersonCamera;
+                    currentRobot.aimToIdle();
+                }
+                else {
+                    currentRobot.walkToIdle();
+                }
+                //Reset all flags to stop all ongoing actions
+                moveForward = false;
+                moveBackward = false;
+                turnLeft = false;
+                turnRight = false;
+                aimUp = false;
+                aimDown = false;
+                document.querySelector("#container").style.display = "none";    //Remove gui
+
+                nextTurn();
+            }
+        }, 1000);
+    }
+
     //Charge up the shot and then shoot
     function chargeShot() {                     //Increases a counter
         let power = 0;
         let approximation;                      //Number displayed on the gui (one decimal digit)
-        charging = true;
 
         let interval = setInterval(() => {
             power += 0.1;
@@ -252,7 +303,7 @@ function main() {
                 
                 //Create new bullet, shoot and wait for next turn
                 const bulletBody = bullet(power);
-                bulletBody.addEventListener("collide", nextTurn);
+                bulletBody.addEventListener("collide", endTurn);
                 currentRobot.shoot();
 
                 document.querySelector("#power").innerHTML = "POWER: " + 0;
@@ -300,9 +351,9 @@ function main() {
         return bulletBody;          //Used for bullet listener to detect the first collision*/
     }
 
-    //Go to next player's turn
-    function nextTurn(e) {
-        this.removeEventListener("collide", nextTurn);  //Remove listener from bullet (detect only one collision)
+    //Look for the bullet's collision which ends the turn
+    function endTurn(e) {
+        this.removeEventListener("collide", endTurn);  //Remove listener from bullet (detect only one collision)
         
         for (let i=0; i < world.contacts.length; i++) { //Scan all contacts
             let c = world.contacts[i];
@@ -318,6 +369,11 @@ function main() {
             });
         }
 
+        nextTurn();
+    }
+
+    //Go to next player's turn
+    function nextTurn() {
         //Last team remaining is the winner
         if (robots.every(robot => robot.team == 0)) {
             gameOver();
@@ -342,6 +398,9 @@ function main() {
                 global = false;                             //Reset flags
                 firstPerson = false;
                 waitForCollision = false;
+
+                document.querySelector("#timer").innerHTML = turnTime;
+                countdown();
             }, 1800);
         }
     }

@@ -74,11 +74,22 @@ subtitle {              /*Also used for the rules*/
 
 #power {                    /*Used for span instead of div (it uses one line)*/
     position: relative;     /*It doesn't move when more digits appear*/
-    top: 90%;
-    left: 38%;
+    top: 88%;
+    left: 40%;
     transform: translate(-50%,-50%);
-    font-size: 50px;
+    font-size: 55px;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
     color: goldenrod;
+}
+
+#timer {
+    position: absolute;
+    top: 75%;
+    left: 86%;
+    font-size: 120px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    color: goldenrod;
+    display: block; 
 }

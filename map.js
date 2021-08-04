@@ -454,8 +454,8 @@ function createTurret(x, z, scene, world) {
             normalMap: normalTexture,
             roughnessMap: roughnessTexture
         }),
-        new THREE.MeshPhongMaterial({color: "#737373"}),
-        new THREE.MeshPhongMaterial({color: "#737373"})
+        new THREE.MeshPhongMaterial({color: "#504c4c"}),
+        new THREE.MeshPhongMaterial({color: "#504c4c"})
     ];
 
     //Cylinder
