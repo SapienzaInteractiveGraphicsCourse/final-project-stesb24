@@ -33,12 +33,12 @@ subtitle {              /*Also used for the rules*/
     display: block;
 }
 
-.button-class {
-    background-color: red;
+.menu-button {
     margin-top: 40px;
     margin-bottom: 40px;
     margin-left: auto;
     margin-right: auto;
+    background-color: red;
     padding-top: 12px;
     padding-bottom: 12px;
     padding-left: 25px;
@@ -51,17 +51,6 @@ subtitle {              /*Also used for the rules*/
     display: block;
 }
 
-#container {            /*"General" div that contains the divs for the gui*/
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: none;      /*The div and all the divs it contains are all hidden*/
-}
-
 #crosshair {
     position: absolute;
     top: 50%;
@@ -70,26 +59,57 @@ subtitle {              /*Also used for the rules*/
     font-size: 63px;
     font-weight: bold;
     color: black;
+    display: none;
 }
 
-#power {                    /*Used for span instead of div (it uses one line)*/
-    position: relative;     /*It doesn't move when more digits appear*/
+#power {
+    position: absolute;
     top: 88%;
-    left: 40%;
-    transform: translate(-50%,-50%);
+    left: 38%;
+    background-color: black;
     font-size: 55px;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
     color: goldenrod;
+    display: none;
 }
 
 #timer {
     position: absolute;
-    top: 75%;
-    left: 86%;
-    font-size: 120px;
+    background-color: black;
+    top: 78%;
+    left: 87%;
+    font-size: 100px;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
     color: goldenrod;
     display: block; 
+}
+
+#gameOver {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background-color: black;
+    text-align: center;
+    font-size: 70px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    display: none;
+}
+
+.end-button {
+    margin: 0 auto;
+    margin-bottom: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-left: 25px;
+    padding-right: 25px;
+    text-align: center;
+    font-size: 23px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    color: white;
+    display: inline;
 }

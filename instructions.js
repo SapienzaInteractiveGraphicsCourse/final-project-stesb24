@@ -36,7 +36,7 @@ function instructions() {
     document.body.appendChild(end);
 
     const backButton = document.createElement("button");
-    backButton.setAttribute("class", "button-class");
+    backButton.setAttribute("class", "menu-button");
     backButton.innerText = "Back";
     backButton.style.backgroundColor = "purple";
     backButton.style.marginBottom = 0;

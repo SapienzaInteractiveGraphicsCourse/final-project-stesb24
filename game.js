@@ -1,20 +1,21 @@
 import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
+import {menu} from "./menu.js";
 import {makeCamera, resizeRendererToDisplaySize} from "./utils.js";
 
 let renderer;
 
 const numTeams = 2;
 const robotsPerTeam = 4;
-let numRobots = numTeams * robotsPerTeam;
+let numRobots;
 
-const robots = [];
-let currentRobotNumber = 0;
+let robots;
+let currentRobotNumber;
 let currentRobot;
 
-let bullets = [];
-let bulletBodies = [];
+let bullets;
+let bulletBodies;
 
 const turnTime = 15;
 
@@ -25,18 +26,26 @@ function setUpDocument() {
     const canvas = document.createElement("canvas");
     canvas.setAttribute("id", "c");
 
-    const div = document.createElement("div");          //Contains the various parts of gui
-    div.setAttribute("id", "container");
-    div.innerHTML = "<div id=crosshair>+</div>" + 
-                    "<span id=power>POWER: 0</span>";
+    const crosshair = document.createElement("div");
+    crosshair.setAttribute("id", "crosshair");
+    crosshair.innerHTML = "+";
+
+    const power = document.createElement("div");
+    power.setAttribute("id", "power");
+    power.innerHTML = "POWER: 0";
 
     const timer = document.createElement("div");
     timer.setAttribute("id", "timer");
     timer.innerHTML = turnTime;
 
+    const gameOver = document.createElement("div");
+    gameOver.setAttribute("id", "gameOver");
+
     document.body.appendChild(canvas);
-    document.body.appendChild(div);
+    document.body.appendChild(crosshair);
+    document.body.appendChild(power);
     document.body.appendChild(timer);
+    document.body.appendChild(gameOver);
 
     renderer = new THREE.WebGLRenderer({canvas});
     renderer.shadowMap.enabled = true;
@@ -59,6 +68,12 @@ function main() {
     //Create all lights and objects
     createMap(scene, world);
 
+    //Initialize variables (for when the game restarts)
+    numRobots = numTeams * robotsPerTeam;
+    robots = [];
+    bullets = [];
+    bulletBodies = [];
+
     //Create the robots and their cameras
     for (let i=0; i < numRobots; i++) {
         const robot = new Robot(i, scene, world);
@@ -73,7 +88,8 @@ function main() {
     globalCamera.lookAt(0, 0, 0);
 
     //First robot
-    currentRobot = robots[0];
+    currentRobotNumber = 0;
+    currentRobot = robots[currentRobotNumber];
     currentRobot.body.mass = 70;        //The robot that acts must be affected by all physics (collides with objects)
     currentRobot.body.type = CANNON.Body.DYNAMIC;
     currentRobot.body.updateMassProperties();
@@ -154,13 +170,14 @@ function main() {
                     if (!global) {              //Switch to global camera
                         if (firstPerson) {      //If aiming, go back to idle
                             currentRobot.aimToIdle();
-                            document.querySelector("#container").style.display = "none"     //Remove gui
+                            document.querySelector("#crosshair").style.display = "none"   //Remove gui
+                            document.querySelector("#power").style.display = "none"
                         }
                         global = true;
                         firstPerson = false;
                         camera = globalCamera;
                     }
-                    else {                  //Switch back to third person camera
+                    else {                      //Switch back to third person camera
                         global = false;
                         firstPerson = false;
                         camera = currentRobot.thirdPersonCamera;
@@ -184,7 +201,8 @@ function main() {
                         camera = currentRobot.firstPersonCamera;
 
                         //Display gui
-                        document.querySelector("#container").style.display = "block"
+                        document.querySelector("#crosshair").style.display = "block"
+                        document.querySelector("#power").style.display = "block"
                     }
                     else {                  //Switch back to third person camera
                         //Reset all aiming flags
@@ -199,7 +217,8 @@ function main() {
                         camera = currentRobot.thirdPersonCamera;
 
                         //Remove gui
-                        document.querySelector("#container").style.display = "none"
+                        document.querySelector("#crosshair").style.display = "none"
+                        document.querySelector("#power").style.display = "none"
                     }
                 }
                 break;
@@ -244,15 +263,23 @@ function main() {
 
     function countdown() {
         let time = turnTime;
+        let displayedTime;
 
         let interval = setInterval(() => {
-            if (charging) {                     //Start shooting in time
+            if (charging) {                     //Started shooting in time
+                console.log("c")
                 clearInterval(interval);        //Delete the countdown
                 return;                         //Exit from the cycle now (avoid further iterations)
             }
 
-            time -= 1;
-            document.querySelector("#timer").innerHTML = time;
+            time -= 0.01;
+            displayedTime = (Math.ceil(time));  //Changes every one second
+            if (displayedTime >= 10) {
+                document.querySelector("#timer").innerHTML = displayedTime;
+            }
+            else {                              //Always two digits
+                document.querySelector("#timer").innerHTML = "0" + displayedTime;
+            }
 
             if (time <= 0) {                    //Time's up
                 clearInterval(interval);
@@ -272,11 +299,12 @@ function main() {
                 turnRight = false;
                 aimUp = false;
                 aimDown = false;
-                document.querySelector("#container").style.display = "none";    //Remove gui
+                document.querySelector("#crosshair").style.display = "none"        //Remove gui
+                document.querySelector("#power").style.display = "none"
 
                 nextTurn();
             }
-        }, 1000);
+        }, 10);
     }
 
     //Charge up the shot and then shoot
@@ -291,8 +319,8 @@ function main() {
 
             if (!charging || power >= 10) {     //Stopped charging or max charge
                 //Remove gui
-                document.querySelector("#container").style.display = "none"
-
+                document.querySelector("#crosshair").style.display = "none"
+                document.querySelector("#power").style.display = "none"
                 camera = currentRobot.thirdPersonCamera;
                 clearInterval(interval);        //Stop loop
 
@@ -376,12 +404,10 @@ function main() {
     function nextTurn() {
         //Last team remaining is the winner
         if (robots.every(robot => robot.team == 0)) {
-            gameOver();
-            console.log("Red team wins");
+            gameOver("RED");
         }
         else if (robots.every(robot => robot.team == 1)) {
-            gameOver();
-            console.log("Blue team wins");
+            gameOver("BLUE");
         }
         //Change turn some time after the collision
         else {
@@ -460,8 +486,22 @@ function main() {
         }
     }
 
-    function gameOver() {
+    function gameOver(team) {
+        const gui = document.querySelector("#gameOver");
+        gui.innerHTML = team + " TEAM WINS! <br>"+
+                        "<button class=end-button id=newGame>New game</button>" +
+                        "<button class=end-button id=mainMenu>Main menu</button> <br>";
+        gui.style.color = team;
 
+        const newGameButton = document.querySelector("#newGame");
+        newGameButton.onclick = main;
+        newGameButton.style.backgroundColor = team;
+
+        const menuButton = document.querySelector("#mainMenu");
+        menuButton.onclick = menu;
+        menuButton.style.backgroundColor = team;
+
+        gui.style.display = "block";
     }
     
     //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
@@ -508,4 +548,4 @@ function main() {
     requestAnimationFrame(render);
 }
 
-export {main, makeCamera};
+export {main};

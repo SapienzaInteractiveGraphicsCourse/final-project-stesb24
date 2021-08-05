@@ -13,13 +13,13 @@ function menu() {
     document.body.appendChild(subTitle);
 
     const newGameButton = document.createElement("button");
-    newGameButton.setAttribute("class", "button-class");
+    newGameButton.setAttribute("class", "menu-button");
     newGameButton.innerText = "New game";
     newGameButton.onclick = main;
     document.body.appendChild(newGameButton);
 
     const howToPlayButton = document.createElement("button");
-    howToPlayButton.setAttribute("class", "button-class");
+    howToPlayButton.setAttribute("class", "menu-button");
     howToPlayButton.innerText = "How to play";
     howToPlayButton.style.backgroundColor = "blue";
     howToPlayButton.style.marginBottom = 0;
