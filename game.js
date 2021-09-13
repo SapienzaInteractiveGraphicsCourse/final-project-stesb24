@@ -1,4 +1,4 @@
-import * as THREE from "./libs/three.module.js";    //r130
+//import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {menu} from "./menu.js";
@@ -34,6 +34,9 @@ function setUpDocument() {
     power.setAttribute("id", "power");
     power.innerHTML = "POWER: 0";
 
+    const hit = document.createElement("div");
+    hit.setAttribute("id", "hit");
+
     const timer = document.createElement("div");
     timer.setAttribute("id", "timer");
     timer.innerHTML = turnTime;
@@ -44,6 +47,7 @@ function setUpDocument() {
     document.body.appendChild(canvas);
     document.body.appendChild(crosshair);
     document.body.appendChild(power);
+    document.body.appendChild(hit);
     document.body.appendChild(timer);
     document.body.appendChild(gameOver);
 
@@ -389,6 +393,7 @@ function main() {
     //Look for the bullet's collision which ends the turn
     function endTurn(e) {
         this.removeEventListener("collide", endTurn);  //Remove listener from bullet (detect only one collision)
+        let missed = true;
         
         for (let i=0; i < world.contacts.length; i++) { //Scan all contacts
             let c = world.contacts[i];
@@ -400,8 +405,20 @@ function main() {
                         robots.splice(index, 1);
                         numRobots--;
                     }
+                    if (currentRobot.team != robot.team) {
+                        document.querySelector("#hit").innerHTML = "You hit an enemy!";
+                    }
+                    else {
+                        document.querySelector("#hit").innerHTML = "You hit an ally!";
+                    }
+                    document.querySelector("#hit").style.display = "block";
+                    missed = false;
                 }
             });
+        }
+        if (missed) {
+            document.querySelector("#hit").innerHTML = "You missed!";
+            document.querySelector("#hit").style.display = "block";
         }
 
         nextTurn();
@@ -431,6 +448,9 @@ function main() {
                 global = false;                             //Reset flags
                 firstPerson = false;
                 waitForCollision = false;
+
+                document.querySelector("#hit").innerHTML = "";
+                document.querySelector("#hit").style.display = "none";
 
                 document.querySelector("#timer").innerHTML = turnTime;
                 countdown();
@@ -511,12 +531,12 @@ function main() {
         gui.style.display = "block";
     }
     
-    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        //cannonDebugRenderer.update();
+        cannonDebugRenderer.update();
 
         //Move the robot
         move();
