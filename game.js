@@ -1,4 +1,4 @@
-//import * as THREE from "./libs/three.module.js";    //r130
+import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {menu} from "./menu.js";
@@ -113,7 +113,6 @@ function main() {
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
 
     document.addEventListener("keydown", e => {
-        console.log(e.code)
         switch (e.code) {
             //Move or shoot only if you haven't shot yet (= !waitForCollision)
             case "KeyW":
@@ -512,12 +511,12 @@ function main() {
         gui.style.display = "block";
     }
     
-    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        cannonDebugRenderer.update();
+        //cannonDebugRenderer.update();
 
         //Move the robot
         move();
