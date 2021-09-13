@@ -206,6 +206,8 @@ class Robot {
 
         this.currentTween;          //Current animation
         this.still = true;          //Robot is not moving
+        console.log(this.body.mass);
+        console.log(this.body.type);
     }
 
     decreaseHealth() {            //Returns true if the robot dies

@@ -1,4 +1,4 @@
-import * as THREE from "./libs/three.module.js";    //r130
+//import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {menu} from "./menu.js";
@@ -113,9 +113,11 @@ function main() {
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
 
     document.addEventListener("keydown", e => {
+        console.log(e.code)
         switch (e.code) {
             //Move or shoot only if you haven't shot yet (= !waitForCollision)
             case "KeyW":
+            case "ArrowUp":
                 if (!waitForCollision) {
                     if (!firstPerson) {         //Move
                         moveForward = true;
@@ -127,6 +129,7 @@ function main() {
                 }
                 break;
             case "KeyS":
+            case "ArrowDown":
                 if (!waitForCollision) {
                     if (!firstPerson) {         //Move
                         moveBackward = true;
@@ -138,11 +141,13 @@ function main() {
                 }
                 break;
             case "KeyA":
+            case "ArrowLeft":
                 if (!waitForCollision) {
                     turnLeft = true;            //Move or aim
                 }
                 break;
             case "KeyD":
+            case "ArrowRight":
                 if (!waitForCollision) {
                     turnRight = true;           //Move or aim
                 }
@@ -228,6 +233,7 @@ function main() {
     document.addEventListener("keyup", e => {
         switch (e.code) {
             case "KeyW":
+            case "ArrowUp":
                 if (!firstPerson) {         //Stop moving
                     moveForward = false;
                     currentRobot.walkToIdle();
@@ -237,6 +243,7 @@ function main() {
                 }
                 break;
             case "KeyS":
+            case "ArrowDown":
                 if (!firstPerson) {         //Stop moving
                     moveBackward = false;
                     currentRobot.walkToIdle();
@@ -246,9 +253,11 @@ function main() {
                 }
                 break;
             case "KeyA":
+            case "ArrowLeft":
                 turnLeft = false;           //Stop moving or aiming
                 break;
             case "KeyD":
+            case "ArrowRight":
                 turnRight = false;          //Stop moving or aiming
                 break;
             case "Space":
@@ -267,7 +276,6 @@ function main() {
 
         let interval = setInterval(() => {
             if (charging) {                     //Started shooting in time
-                console.log("c")
                 clearInterval(interval);        //Delete the countdown
                 return;                         //Exit from the cycle now (avoid further iterations)
             }
@@ -504,12 +512,12 @@ function main() {
         gui.style.display = "block";
     }
     
-    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        //cannonDebugRenderer.update();
+        cannonDebugRenderer.update();
 
         //Move the robot
         move();

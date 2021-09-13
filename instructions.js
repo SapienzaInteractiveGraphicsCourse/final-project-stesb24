@@ -18,7 +18,7 @@ function instructions() {
 
     const list = document.createElement("subtitle");
     list.innerHTML =
-    "<ul><li>move with W, A, S and D; if you are in first person view, use them to take the aim instead;</li>" +
+    "<ul><li>move with WASD or arrow keys; if you are in first person view, use them to take the aim instead;</li>" +
     "<li>press E once to view the whole map from above, press again to go back to third person;</li>" +
     "<li>press Q once for the first person mode, from which you can take the aim and shoot; press again " +
     "to go back to third person;</li><li>while in first person view, hold SPACEBAR to charge up the shot (the more you " +
