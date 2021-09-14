@@ -10,11 +10,11 @@ const numTeams = 2;
 const robotsPerTeam = 4;
 let numRobots;
 
-let robots;
-let currentRobotNumber;
+let robots;                     //Array of all Robot objects
+let currentRobotNumber;         //Index of the current robot
 let currentRobot;
 
-let bullets;
+let bullets;                    //Array of all bullets
 let bulletBodies;
 
 const turnTime = 15;
@@ -275,7 +275,7 @@ function main() {
 
     function countdown() {
         let time = turnTime;
-        let displayedTime;
+        let displayedTime;                      //Integer number displayed
 
         let interval = setInterval(() => {
             if (charging) {                     //Started shooting in time
@@ -288,7 +288,7 @@ function main() {
             if (displayedTime >= 10) {
                 document.querySelector("#timer").innerHTML = displayedTime;
             }
-            else {                              //Always two digits
+            else {                              //Always two integer digits
                 document.querySelector("#timer").innerHTML = "0" + displayedTime;
             }
 
@@ -310,8 +310,15 @@ function main() {
                 turnRight = false;
                 aimUp = false;
                 aimDown = false;
-                document.querySelector("#crosshair").style.display = "none"        //Remove gui
-                document.querySelector("#power").style.display = "none"
+
+                //Remove gui
+                document.querySelector("#crosshair").style.display = "none";
+                document.querySelector("#power").style.display = "none";
+
+                //Robot becomes static again
+                currentRobot.body.mass = 0;
+                currentRobot.body.type = CANNON.Body.STATIC;
+                currentRobot.body.updateMassProperties();
 
                 nextTurn();
             }
@@ -406,10 +413,10 @@ function main() {
                         numRobots--;
                     }
                     if (currentRobot.team != robot.team) {
-                        document.querySelector("#hit").innerHTML = "You hit an enemy!";
+                        document.querySelector("#hit").innerHTML = "You've hit an enemy!";
                     }
                     else {
-                        document.querySelector("#hit").innerHTML = "You hit an ally!";
+                        document.querySelector("#hit").innerHTML = "You've hit an ally!";
                     }
                     document.querySelector("#hit").style.display = "block";
                     missed = false;

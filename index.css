@@ -51,7 +51,7 @@ subtitle {              /*Also used for the rules*/
     display: block;
 }
 
-#crosshair {
+#crosshair {            /*"+" in the middle of the screen*/
     position: absolute;
     top: 50%;
     left: 50%;
@@ -62,7 +62,7 @@ subtitle {              /*Also used for the rules*/
     display: none;
 }
 
-#power {
+#power {                /*Current shot power (from 0 to 10)*/
     position: absolute;
     top: 88%;
     left: 38%;
@@ -74,11 +74,11 @@ subtitle {              /*Also used for the rules*/
     display: none;
 }
 
-#timer {
+#timer {                /*Time left*/
     position: absolute;
-    background-color: black;
     top: 78%;
     left: 87%;
+    background-color: black;
     font-size: 100px;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
@@ -86,11 +86,12 @@ subtitle {              /*Also used for the rules*/
     display: block; 
 }
 
-#hit {
+#hit {                  /*Warning that tells if you hit or missed*/
     position: fixed;
+    top: 8%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: black;
-    top: 5%;
-    left: 40%;
     font-size: 42px;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
@@ -98,7 +99,7 @@ subtitle {              /*Also used for the rules*/
     display: none; 
 }
 
-#gameOver {
+#gameOver {             /*Tells who won*/
     position: absolute;
     top: 45%;
     left: 50%;
@@ -111,7 +112,7 @@ subtitle {              /*Also used for the rules*/
     display: none;
 }
 
-.end-button {
+.end-button {           /*Game over buttons*/
     margin: 0 auto;
     margin-bottom: 12px;
     padding-top: 12px;
