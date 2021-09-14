@@ -7,7 +7,7 @@ import {makeCamera, resizeRendererToDisplaySize} from "./utils.js";
 let renderer;
 
 const numTeams = 2;
-const robotsPerTeam = 4;
+const robotsPerTeam = 1;
 let numRobots;
 
 let robots;                     //Array of all Robot objects
@@ -94,7 +94,8 @@ function main() {
     //First robot
     currentRobotNumber = 0;
     currentRobot = robots[currentRobotNumber];
-    currentRobot.body.mass = 70;        //The robot that acts must be affected by all physics (collides with objects)
+    const robotMass = 70;
+    currentRobot.body.mass = robotMass;        //The robot that acts must be affected by all physics (collides with objects)
     currentRobot.body.type = CANNON.Body.DYNAMIC;
     currentRobot.body.updateMassProperties();
 
@@ -412,10 +413,10 @@ function main() {
                         robots.splice(index, 1);
                         numRobots--;
                     }
-                    if (currentRobot.team != robot.team) {
+                    if (currentRobot.team != robot.team) {      //Enemy hit
                         document.querySelector("#hit").innerHTML = "You've hit an enemy!";
                     }
-                    else {
+                    else {                                      //Ally hit
                         document.querySelector("#hit").innerHTML = "You've hit an ally!";
                     }
                     document.querySelector("#hit").style.display = "block";
@@ -423,7 +424,7 @@ function main() {
                 }
             });
         }
-        if (missed) {
+        if (missed) {                       //Missed
             document.querySelector("#hit").innerHTML = "You missed!";
             document.querySelector("#hit").style.display = "block";
         }
@@ -448,7 +449,7 @@ function main() {
                 camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
 
                 //The new robot becomes dynamic
-                currentRobot.body.mass = 70;
+                currentRobot.body.mass = robotMass;
                 currentRobot.body.type = CANNON.Body.DYNAMIC;
                 currentRobot.body.updateMassProperties();
 
@@ -520,7 +521,7 @@ function main() {
         }
     }
 
-    function gameOver(team) {
+    function gameOver(team) {                   //Victory screen
         const gui = document.querySelector("#gameOver");
         gui.innerHTML = team + " TEAM WINS! <br>"+
                         "<button class=end-button id=newGame>New game</button>" +
@@ -559,8 +560,9 @@ function main() {
             bullet.quaternion.copy(bulletBodies[index].quaternion);
         });
         //Don't iterate over bullets outside of map (remove them)
-        bullets = bullets.filter(bullet => bullet.position.y >= -8);
-        bulletBodies = bulletBodies.filter(body => body.position.y >= -8);
+        const minHeight = -8;
+        bullets = bullets.filter(bullet => bullet.position.y >= minHeight);
+        bulletBodies = bulletBodies.filter(body => body.position.y >= minHeight);
 
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
         if (resizeRendererToDisplaySize(renderer)) {

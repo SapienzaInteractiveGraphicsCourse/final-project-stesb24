@@ -102,9 +102,11 @@ class Robot {
         this.rightLowerLeg.position.y = -legHeight / 2;
 
         //Left arm (torso's child)
+        const shoulderOffsetX = 0.05;
+        const shoulderOffsetY = 0.075;
         this.leftShoulder = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        this.leftShoulder.position.x = -torsoWidth / 2 - sphereRadius + 0.05;
-        this.leftShoulder.position.y = torsoHeight / 2 - 0.075;
+        this.leftShoulder.position.x = -torsoWidth / 2 - sphereRadius + shoulderOffsetX;
+        this.leftShoulder.position.y = torsoHeight / 2 - shoulderOffsetY;
         this.leftShoulder.rotation.z = -Math.PI / 20;
 
         this.leftUpperArm = new THREE.Mesh(armGeometry, material);
@@ -119,8 +121,8 @@ class Robot {
 
         //Right Arm (torso's child)
         this.rightShoulder = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        this.rightShoulder.position.x = torsoWidth / 2 + sphereRadius - 0.05;
-        this.rightShoulder.position.y = torsoHeight / 2 - 0.075;
+        this.rightShoulder.position.x = torsoWidth / 2 + sphereRadius - shoulderOffsetX;
+        this.rightShoulder.position.y = torsoHeight / 2 - shoulderOffsetY;
         this.rightShoulder.rotation.z = Math.PI / 20;
 
         this.rightUpperArm = new THREE.Mesh(armGeometry, material);
@@ -135,8 +137,9 @@ class Robot {
         this.rightLowerArm = new THREE.Mesh(rightLowerArmGeometry, cannonMaterial);
         this.rightLowerArm.position.y = -armHeight / 2;
 
+        const handOffsetY = 0.22;
         this.rightHand = new THREE.Object3D()           //This is used to know where the bullet is shot from
-        this.rightHand.position.y = -armHeight / 2 - 0.22;
+        this.rightHand.position.y = -armHeight / 2 - handOffsetY;
 
         //Head (torso's child)
         const headGeometry = new THREE.SphereGeometry(headRadius, headSegments, headSegments);
