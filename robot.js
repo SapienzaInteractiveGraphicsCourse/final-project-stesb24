@@ -42,7 +42,7 @@ class Robot {
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene, world) {
-        this.health = 3;
+        this.health = 1;
         this.team;
         this.id = robotNumber;
 
@@ -198,9 +198,9 @@ class Robot {
         const halfY = (2*legHeight + torsoHeight + 2*headRadius - headOffset) / 2;
         const halfZ = torsoDepth / 2;
         const halfExtents = new CANNON.Vec3(halfX, halfY, halfZ);
-        const boxShape = new CANNON.Box(halfExtents);
+        this.boxShape = new CANNON.Box(halfExtents);
         this.body = new CANNON.Body({mass: 0});
-        this.body.addShape(boxShape);
+        this.body.addShape(this.boxShape);
         this.body.position.set(initialX, halfY, initialZ);
         this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), initialAngle);
         this.body.angularDamping = 1;       //The body remains closer to the robot when rotating
@@ -210,13 +210,22 @@ class Robot {
 
         this.currentTween;          //Current animation
         this.still = true;          //Robot is not moving
+        console.log(this.boxShape)
     }
 
     decreaseHealth() {            //Returns true if the robot dies
+        console.log(this.boxShape)
         this.health--;
         if (this.health <= 0) {
             this.death();         //Death animation
         }
+    }
+
+    newHitbox() {                 //Changes the body to match the ne position when dead
+        this.boxShape.halfExtents.set(0.45, 0.96, 0.45);
+        this.boxShape.updateConvexPolyhedronRepresentation();
+        this.boxShape.updateBoundingSphereRadius();
+        this.body.computeAABB();
     }
 
     //Animations
@@ -413,6 +422,7 @@ class Robot {
 
         this.currentTween.chain(goDown);
         goDown.onStart(() => moveArms.start());
+        goDown.onComplete(() => this.newHitbox());
         this.currentTween.start();
     }
 
@@ -421,6 +431,7 @@ class Robot {
             this.currentTween.stop();
         }
     }
+
 }
 
 export {Robot};
