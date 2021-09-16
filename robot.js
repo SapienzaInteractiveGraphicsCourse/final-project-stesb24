@@ -44,6 +44,7 @@ class Robot {
     constructor(robotNumber, scene, world) {
         this.health = 3;
         this.team;
+        this.id = robotNumber;
 
         const material = new THREE.MeshPhongMaterial();
         const sphereMaterial = new THREE.MeshPhongMaterial({color: "#474544"});
@@ -202,7 +203,7 @@ class Robot {
         this.body.addShape(boxShape);
         this.body.position.set(initialX, halfY, initialZ);
         this.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), initialAngle);
-        this.body.angularDamping = 1;
+        this.body.angularDamping = 1;       //The body remains closer to the robot when rotating
 
         scene.add(this.waist);
         world.add(this.body);
@@ -213,7 +214,6 @@ class Robot {
 
     decreaseHealth() {            //Returns true if the robot dies
         this.health--;
-        console.log(this.health);
         if (this.health <= 0) {
             this.death();         //Death animation
         }

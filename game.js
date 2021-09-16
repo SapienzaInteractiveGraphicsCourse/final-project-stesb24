@@ -2,17 +2,22 @@ import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {menu} from "./menu.js";
-import {makeCamera, resizeRendererToDisplaySize} from "./utils.js";
+import {makeCamera, resizeRendererToDisplaySize, resizeAspect} from "./utils.js";
 
 let renderer;
 
 const numTeams = 2;
-const robotsPerTeam = 1;
-let numRobots;
+const robotsPerTeam = 4;
+let numRedRobots;               //How many red robots are left
+let numBlueRobots;              //How many blue robots are left
 
-let robots;                     //Array of all Robot objects
-let currentRobotNumber;         //Index of the current robot
+let redRobots;                  //Array of red Robot objects
+let blueRobots;                 //Array of blue Robot objects
+let redRobotIndex;              //Index of the next red robot to play
+let blueRobotIndex;             //Index of the next blue robot to play
 let currentRobot;
+
+let nextRed;                    //True = a red robot will play the next turn, false = a blue one
 
 let bullets;                    //Array of all bullets
 let bulletBodies;
@@ -67,23 +72,31 @@ function main() {
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
-    //world.defaultContactMaterial.friction = 0;
+    world.defaultContactMaterial.friction = 0;      //Prevents bodies from "sliding" during the game
 
     //Create all lights and objects
     createMap(scene, world);
 
     //Initialize variables (for when the game restarts)
-    numRobots = numTeams * robotsPerTeam;
-    robots = [];
+    numRedRobots = robotsPerTeam;
+    numBlueRobots = numRedRobots;
+    redRobots = [];
+    blueRobots = [];
     bullets = [];
     bulletBodies = [];
 
     //Create the robots and their cameras
-    for (let i=0; i < numRobots; i++) {
+    for (let i=0; i < numTeams * robotsPerTeam; i++) {
         const robot = new Robot(i, scene, world);
         robot.idle();
 
-        robots.push(robot);
+        //Even index = red team; odd index = blue team
+        if (i % 2 == 0) {
+            redRobots.push(robot);
+        }
+        else {
+            blueRobots.push(robot);
+        }
     };
 
     //Detached camera looking from above
@@ -91,11 +104,14 @@ function main() {
     globalCamera.position.y = 52;
     globalCamera.lookAt(0, 0, 0);
 
-    //First robot
-    currentRobotNumber = 0;
-    currentRobot = robots[currentRobotNumber];
+    //First robot to play
+    redRobotIndex = 0;
+    blueRobotIndex = 0;
+    nextRed = false;                           //Blue team will play after the first robot
+    currentRobot = redRobots[redRobotIndex];   //First robot is red
+
     const robotMass = 70;
-    currentRobot.body.mass = robotMass;        //The robot that acts must be affected by all physics (collides with objects)
+    currentRobot.body.mass = robotMass;        //Robots that act must be affected by all physics (collide with objects)
     currentRobot.body.type = CANNON.Body.DYNAMIC;
     currentRobot.body.updateMassProperties();
 
@@ -405,13 +421,32 @@ function main() {
         
         for (let i=0; i < world.contacts.length; i++) { //Scan all contacts
             let c = world.contacts[i];
-            robots.forEach(robot => {                   //Check if contact is between the bullet and a robot
+            //Check if contact is between the bullet and a robot (red or blue)
+            redRobots.forEach(robot => {
                 if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
                     robot.decreaseHealth();
                     if (robot.health <= 0) {            //Remove the dead robot
-                        const index = robots.indexOf(robot);
-                        robots.splice(index, 1);
-                        numRobots--;
+                        const index = redRobots.indexOf(robot);
+                        redRobots.splice(index, 1);
+                        numRedRobots--;
+                    }
+                    if (currentRobot.team != robot.team) {      //Enemy hit
+                        document.querySelector("#hit").innerHTML = "You've hit an enemy!";
+                    }
+                    else {                                      //Ally hit
+                        document.querySelector("#hit").innerHTML = "You've hit an ally!";
+                    }
+                    document.querySelector("#hit").style.display = "block";
+                    missed = false;
+                }
+            });
+            blueRobots.forEach(robot => {
+                if ((c.bi === this && c.bj === robot.body) || (c.bi === robot.body && c.bj === this)) {
+                    robot.decreaseHealth();
+                    if (robot.health <= 0) {            //Remove the dead robot
+                        const index = blueRobots.indexOf(robot);
+                        blueRobots.splice(index, 1);
+                        numBlueRobots--;
                     }
                     if (currentRobot.team != robot.team) {      //Enemy hit
                         document.querySelector("#hit").innerHTML = "You've hit an enemy!";
@@ -435,18 +470,27 @@ function main() {
     //Go to next player's turn
     function nextTurn() {
         //Last team remaining is the winner
-        if (robots.every(robot => robot.team == 0)) {
-            gameOver("RED");
-        }
-        else if (robots.every(robot => robot.team == 1)) {
+        if (redRobots.length == 0) {            //No more red robots
             gameOver("BLUE");
+        }
+        else if (blueRobots.length == 0) {      //No more blue robots
+            gameOver("RED");
         }
         //Change turn some time after the collision
         else {
             setTimeout(() => {
-                currentRobotNumber = (currentRobotNumber + 1) % numRobots;
-                currentRobot = robots[currentRobotNumber];
-                camera = currentRobot.thirdPersonCamera;    //Switch to next player's camera
+                if (nextRed) {
+                    blueRobotIndex = (blueRobotIndex + 1) % numBlueRobots;  //Increase counter for blue team
+                    redRobotIndex = redRobotIndex % numRedRobots;           //numRedRobots could have decreased
+                    currentRobot = redRobots[redRobotIndex];                //Next robot is red
+                }
+                else {
+                    redRobotIndex = (redRobotIndex + 1) % numRedRobots;     //Increase counter for red team
+                    blueRobotIndex = blueRobotIndex % numBlueRobots;        //numBlueRobots could have decreased
+                    currentRobot = blueRobots[blueRobotIndex];              //Next robot is blue
+                }
+                nextRed = !nextRed;
+                camera = currentRobot.thirdPersonCamera;    //Switch to next robot's camera
 
                 //The new robot becomes dynamic
                 currentRobot.body.mass = robotMass;
@@ -502,22 +546,23 @@ function main() {
     //Aim when in first person
     function aim() {
         //How much the robot rotates
-        const rotation = 0.005;
+        const horizontalRotation = 0.003;
+        const verticalRotation = 0.005;
 
         //No if-else so that you can use them together
         if (aimUp && currentRobot.head.rotation.x < Math.PI / 3) {      //Max angle
-            currentRobot.head.rotation.x += rotation;
-            currentRobot.rightShoulder.rotation.x += rotation;
+            currentRobot.head.rotation.x += verticalRotation;
+            currentRobot.rightShoulder.rotation.x += verticalRotation;
         }
         if (aimDown && currentRobot.head.rotation.x > -Math.PI / 8) {   //Min angle
-            currentRobot.head.rotation.x += -rotation;
-            currentRobot.rightShoulder.rotation.x += -rotation;
+            currentRobot.head.rotation.x += -verticalRotation;
+            currentRobot.rightShoulder.rotation.x += -verticalRotation;
         }
         if (turnLeft && firstPerson) {
-            currentRobot.waist.rotation.y += rotation;
+            currentRobot.waist.rotation.y += horizontalRotation;
         }
         if (turnRight && firstPerson) {
-            currentRobot.waist.rotation.y += -rotation;
+            currentRobot.waist.rotation.y += -horizontalRotation;
         }
     }
 
@@ -545,6 +590,17 @@ function main() {
         //Step the physics world
         world.step(1/60);
         //cannonDebugRenderer.update();
+        
+        //DEBUG
+        /*let r = [];
+        console.log("Current red IDs: ")
+        redRobots.forEach(robot => r.push(robot.id));
+        console.log(r)
+        let b = [];
+        console.log("Current blue IDs: ")
+        blueRobots.forEach(robot => b.push(robot.id));
+        console.log(b)
+        console.log("CURRENT ID: " + currentRobot.id)*/
 
         //Move the robot
         move();
@@ -567,11 +623,11 @@ function main() {
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
         if (resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
-            robots.forEach(robot => {
-                robot.thirdPersonCamera.aspect = canvas.clientWidth / canvas.clientHeight;
-                robot.firstPersonCamera.aspect = canvas.clientWidth / canvas.clientHeight;
-                robot.thirdPersonCamera.updateProjectionMatrix();
-                robot.firstPersonCamera.updateProjectionMatrix();
+            redRobots.forEach(robot => {
+                resizeAspect(robot, canvas);
+            });
+            blueRobots.forEach(robot => {
+                resizeAspect(robot, canvas);
             });
             globalCamera.aspect = canvas.clientWidth / canvas.clientHeight;
             globalCamera.updateProjectionMatrix();

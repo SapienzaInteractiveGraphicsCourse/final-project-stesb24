@@ -20,4 +20,11 @@ function resizeRendererToDisplaySize(renderer) {
     return needResize;
 }
 
-export {makeCamera, resizeRendererToDisplaySize};
+function resizeAspect(robot, canvas) {
+    robot.thirdPersonCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+    robot.firstPersonCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+    robot.thirdPersonCamera.updateProjectionMatrix();
+    robot.firstPersonCamera.updateProjectionMatrix();
+}
+
+export {makeCamera, resizeRendererToDisplaySize, resizeAspect};
