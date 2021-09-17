@@ -211,9 +211,12 @@ class Robot {
         this.currentTween;          //Current animation
     }
 
-    decreaseHealth() {              //Returns true if the robot dies
+    decreaseHealth() {
         this.health--;
-        if (this.health <= 0) {
+        if (this.health > 0) {
+            this.hit();             //Hit animation
+        }
+        else {
             this.death();           //Death animation
         }
     }
@@ -383,6 +386,32 @@ class Robot {
         
         this.currentTween.chain(originalPosition);
         originalPosition.chain(this.currentTween);
+
+        this.currentTween.start();
+    }
+
+    hit() {
+        this.stopTween();
+
+        this.currentTween = new TWEEN.Tween([
+                this.torso.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation,
+                this.leftShoulder.rotation,
+                this.leftElbow.rotation])
+            .to([{x: Math.PI/10}, {z: 0.6*Math.PI}, {z: 0.3*Math.PI}, {z: -0.6*Math.PI}, {z: -0.3*Math.PI}], 300)
+            .easing(TWEEN.Easing.Quartic.Out);
+        const originalPosition = new TWEEN.Tween([
+                this.torso.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation,
+                this.leftShoulder.rotation,
+                this.leftElbow.rotation])
+            .to([{x: 0}, {z: Math.PI/20}, {z: 0}, {z: -Math.PI/20}, {z: 0}], 500)
+            .easing(TWEEN.Easing.Quadratic.Out);
+        
+        this.currentTween.chain(originalPosition);
+        this.currentTween.onComplete(() => this.idle())
 
         this.currentTween.start();
     }
