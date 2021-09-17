@@ -33,8 +33,8 @@ const sphereRadius = 0.135;
 const sphereSegments = 10;
 
 class Robot {
-    //This class contains: health, team, currentTween, still,
-    //body, waist, torso, head,
+    //This class contains: health, team, currentTween,
+    //boxShape, body, waist, torso, head,
     //leftLegPivot, leftUpperLeg, leftKnee, leftLowerLeg,
     //rightLegPivot, rightUpperLeg, rightKnee, rightLowerLeg,
     //leftShoulder, leftUpperArm, leftElbow, leftLowerArm,
@@ -42,7 +42,7 @@ class Robot {
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene, world) {
-        this.health = 1;
+        this.health = 3;
         this.team;
         this.id = robotNumber;
 
@@ -209,46 +209,41 @@ class Robot {
         world.add(this.body);
 
         this.currentTween;          //Current animation
-        this.still = true;          //Robot is not moving
-        console.log(this.boxShape)
     }
 
-    decreaseHealth() {            //Returns true if the robot dies
-        console.log(this.boxShape)
+    decreaseHealth() {              //Returns true if the robot dies
         this.health--;
         if (this.health <= 0) {
-            this.death();         //Death animation
+            this.death();           //Death animation
         }
     }
 
-    newHitbox() {                 //Changes the body to match the ne position when dead
-        this.boxShape.halfExtents.set(0.45, 0.96, 0.45);
+    newHitbox() {                   //Changes the body to match the new position when dead
+        this.boxShape.halfExtents.set(0.45, 0.96, 0.45);        //Thicker and shorter hitbox
         this.boxShape.updateConvexPolyhedronRepresentation();
         this.boxShape.updateBoundingSphereRadius();
         this.body.computeAABB();
     }
 
-    //Animations
+    //ANIMATIONS
+
     idleToWalk() {                  //Start walking (right leg goes forward) then walk()
-        if (this.still) {
-            this.stopTween();
-            this.still = false;
+        this.stopTween();
 
-            this.currentTween = new TWEEN.Tween([         //Right forward, left backward
-                    this.rightLegPivot.rotation,
-                    this.rightKnee.rotation,
-                    this.leftLegPivot.rotation,
-                    this.leftKnee.rotation,
-                    this.rightShoulder.rotation,
-                    this.leftShoulder.rotation])
-                .to([{x: Math.PI/6}, {x: -Math.PI/6}, {x: -Math.PI/12}, {x: -Math.PI/6},
-                    {x: -Math.PI/8, z: Math.PI/20}, {x: Math.PI/8}], 180)
-                .easing(TWEEN.Easing.Linear.None).start();
+        this.currentTween = new TWEEN.Tween([         //Right forward, left backward
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightShoulder.rotation,
+                this.leftShoulder.rotation])
+            .to([{x: Math.PI/6}, {x: -Math.PI/6}, {x: -Math.PI/12}, {x: -Math.PI/6},
+                {x: -Math.PI/8, z: Math.PI/20}, {x: Math.PI/8}], 180)
+            .easing(TWEEN.Easing.Linear.None).start();
 
-            this.currentTween.onComplete(() => {
-                this.walk();
-            });
-        }
+        this.currentTween.onComplete(() => {
+            this.walk();
+        });
     }
 
     walk() {                        //Alternate left leg and right leg
@@ -317,7 +312,6 @@ class Robot {
             .to([{x: 0}, {x: 0}, {x: 0}, {x: 0}, {x: 0}, {x: 0}], 300)
             .easing(TWEEN.Easing.Linear.None).start();
 
-        this.still = true;
         this.currentTween.onComplete(() => {
             this.idle();
         })
@@ -325,7 +319,6 @@ class Robot {
 
     toAim() {
         this.stopTween();
-        this.still = true;
 
         this.currentTween = new TWEEN.Tween([
                 this.rightLegPivot.rotation,
@@ -371,29 +364,27 @@ class Robot {
     }
 
     idle() {                        //Up and down with torso
-        if (this.still) {
-            this.currentTween = new TWEEN.Tween([
-                    this.torso.position,
-                    this.leftLegPivot.rotation,
-                    this.leftKnee.rotation,
-                    this.rightLegPivot.rotation,
-                    this.rightKnee.rotation])
-                .to([{y: 0.48}, {x: Math.PI/20}, {x: -Math.PI/10}, {x: Math.PI/20}, {x: -Math.PI/10}], 1200)
-                .easing(TWEEN.Easing.Linear.None);
-            const originalPosition = new TWEEN.Tween([
-                    this.torso.position,
-                    this.leftLegPivot.rotation,
-                    this.leftKnee.rotation,
-                    this.rightLegPivot.rotation,
-                    this.rightKnee.rotation])
-                .to([{y: 0.5}, {x: 0}, {x: 0}, {x: 0}, {x: 0}], 1200)
-                .easing(TWEEN.Easing.Linear.None);
-            
-            this.currentTween.chain(originalPosition);
-            originalPosition.chain(this.currentTween);
+        this.currentTween = new TWEEN.Tween([
+                this.torso.position,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation])
+            .to([{y: 0.48}, {x: Math.PI/20}, {x: -Math.PI/10}, {x: Math.PI/20}, {x: -Math.PI/10}], 1200)
+            .easing(TWEEN.Easing.Linear.None);
+        const originalPosition = new TWEEN.Tween([
+                this.torso.position,
+                this.leftLegPivot.rotation,
+                this.leftKnee.rotation,
+                this.rightLegPivot.rotation,
+                this.rightKnee.rotation])
+            .to([{y: 0.5}, {x: 0}, {x: 0}, {x: 0}, {x: 0}], 1200)
+            .easing(TWEEN.Easing.Linear.None);
+        
+        this.currentTween.chain(originalPosition);
+        originalPosition.chain(this.currentTween);
 
-            this.currentTween.start();
-        }
+        this.currentTween.start();
     }
 
     death() {

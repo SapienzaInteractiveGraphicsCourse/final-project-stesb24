@@ -140,8 +140,10 @@ function main() {
             case "ArrowUp":
                 if (!waitForCollision) {
                     if (!firstPerson) {         //Move
+                        if (!moveForward && !moveBackward) {    //No need to call it again if already moving
+                            currentRobot.idleToWalk();
+                        }
                         moveForward = true;
-                        currentRobot.idleToWalk();
                     }
                     else {                      //Aim
                         aimUp = true;
@@ -152,8 +154,10 @@ function main() {
             case "ArrowDown":
                 if (!waitForCollision) {
                     if (!firstPerson) {         //Move
+                        if (!moveForward && !moveBackward) {    //No need to call it again if already moving
+                            currentRobot.idleToWalk();
+                        }
                         moveBackward = true;
-                        currentRobot.idleToWalk();
                     }
                     else {                      //Aim
                         aimDown = true;
@@ -256,7 +260,8 @@ function main() {
             case "ArrowUp":
                 if (!firstPerson) {         //Stop moving
                     moveForward = false;
-                    currentRobot.walkToIdle();
+                    if (!moveBackward)      //Don't go idle if moving in the other direction
+                        currentRobot.walkToIdle();
                 }
                 else {                      //Stop aiming
                     aimUp = false;
@@ -266,7 +271,8 @@ function main() {
             case "ArrowDown":
                 if (!firstPerson) {         //Stop moving
                     moveBackward = false;
-                    currentRobot.walkToIdle();
+                    if (!moveForward)       //Don't go idle if moving in the other direction
+                        currentRobot.walkToIdle();
                 }
                 else {                      //Stop aiming
                     aimDown = false;
