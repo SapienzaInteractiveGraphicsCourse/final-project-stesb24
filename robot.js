@@ -372,8 +372,11 @@ class Robot {
                 this.leftLegPivot.rotation,
                 this.leftKnee.rotation,
                 this.rightLegPivot.rotation,
-                this.rightKnee.rotation])
-            .to([{y: 0.48}, {x: Math.PI/20}, {x: -Math.PI/10}, {x: Math.PI/20}, {x: -Math.PI/10}], 1200)
+                this.rightKnee.rotation,
+                this.rightShoulder.rotation,
+                this.rightElbow.rotation])
+            .to([{y: 0.48}, {x: Math.PI/20}, {x: -Math.PI/10}, {x: Math.PI/20}, {x: -Math.PI/10},
+                {x: 0, z: Math.PI/20}, {x: Math.PI/15, z: 0}], 1200)
             .easing(TWEEN.Easing.Linear.None);
         const originalPosition = new TWEEN.Tween([
                 this.torso.position,
@@ -411,7 +414,7 @@ class Robot {
             .easing(TWEEN.Easing.Quadratic.Out);
         
         this.currentTween.chain(originalPosition);
-        this.currentTween.onComplete(() => this.idle())
+        originalPosition.onComplete(() => this.idle())
 
         this.currentTween.start();
     }
