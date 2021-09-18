@@ -1,4 +1,4 @@
-import * as THREE from "./libs/three.module.js";    //r130
+//import * as THREE from "./libs/three.module.js";    //r130
 import {createMap} from "./map.js";
 import {Robot} from "./robot.js";
 import {menu} from "./menu.js";
@@ -260,8 +260,9 @@ function main() {
             case "ArrowUp":
                 if (!firstPerson) {         //Stop moving
                     moveForward = false;
-                    if (!moveBackward)      //Don't go idle if moving in the other direction
+                    if (!moveBackward) {    //Don't go idle if moving in the other direction
                         currentRobot.walkToIdle();
+                    }
                 }
                 else {                      //Stop aiming
                     aimUp = false;
@@ -271,8 +272,9 @@ function main() {
             case "ArrowDown":
                 if (!firstPerson) {         //Stop moving
                     moveBackward = false;
-                    if (!moveForward)       //Don't go idle if moving in the other direction
+                    if (!moveForward) {     //Don't go idle if moving in the other direction
                         currentRobot.walkToIdle();
+                    }
                 }
                 else {                      //Stop aiming
                     aimDown = false;
@@ -590,12 +592,12 @@ function main() {
         gui.style.display = "block";
     }
     
-    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+    const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
         //Step the physics world
         world.step(1/60);
-        //cannonDebugRenderer.update();
+        cannonDebugRenderer.update();
         
         //DEBUG
         /*let r = [];
@@ -621,10 +623,6 @@ function main() {
             bullet.position.copy(bulletBodies[index].position);
             bullet.quaternion.copy(bulletBodies[index].quaternion);
         });
-        //Don't iterate over bullets outside of map (remove them)
-        const minHeight = -8;
-        bullets = bullets.filter(bullet => bullet.position.y >= minHeight);
-        bulletBodies = bulletBodies.filter(body => body.position.y >= minHeight);
 
         //The aspect of the cameras matches the aspect of the canvas (no distortions)
         if (resizeRendererToDisplaySize(renderer)) {

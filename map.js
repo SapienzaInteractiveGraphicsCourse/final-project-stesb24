@@ -1,11 +1,226 @@
 import * as THREE from "./libs/three.module.js";
 import {OBJLoader} from "./libs/OBJLoader.js";
+import {main} from "./game.js";
+
+//Materials created when loading textures
+let groundMaterial;
+let wallMaterialsEast, wallMaterialsNorth, wallMaterialsSouth;
+let delimitationWallMaterials;
+let whiteWallMaterials;
+let turretMaterials;
+let barrelMaterial, waterBarrelMaterial;
+let trunkMaterial;
+
+const groundWidth = 45;
+const delimitationWallDepth = 0.5;
+
+function load() {
+    console.log("Loading started");
+    const loadManager = new THREE.LoadingManager();
+    const loader = new THREE.TextureLoader(loadManager);
+
+    //Ground
+    const grassTexture = loader.load("./textures/grass.png");
+    grassTexture.wrapS = THREE.RepeatWrapping;                  //Horizontal wrapping
+    grassTexture.wrapT = THREE.RepeatWrapping;                  //Vertical wrapping
+    grassTexture.repeat.set(8, 8);
+    groundMaterial = new THREE.MeshPhongMaterial({map: grassTexture});
+
+    //Building walls
+    wallMaterialsEast = setUpWallMaterials(3, 1, loader);        //East and west walls
+    wallMaterialsNorth = setUpWallMaterials(2, 1, loader);       //North wall
+    wallMaterialsSouth = setUpWallMaterials(0.75, 1, loader);    //South walls
+
+    //Delimitation wall
+    delimitationWallMaterials = setUpDelimitationWallMaterials(6, 0.58, loader);
+
+    //White wall
+    whiteWallMaterials = setUpWhiteWallMaterials(2, 0.58, loader);
+
+    //Turret
+    turretMaterials = setUpTurretMaterials(2, 3, loader);
+
+    //Barrel
+    const barrelTexture = loader.load("./textures/barrel_0.png");
+    const waterBarrelTexture = loader.load("./textures/barrel_1.png");
+    barrelMaterial = new THREE.MeshPhongMaterial({map: barrelTexture});
+    waterBarrelMaterial = new THREE.MeshPhongMaterial({map: waterBarrelTexture});
+
+    //Trunk
+    const trunkTexture = loader.load("./textures/trunk.png");
+    trunkMaterial = new THREE.MeshPhongMaterial({map: trunkTexture});
+
+    console.log("Loading completed");
+    loadManager.onLoad = () => main();
+}
+
+//Loads textures and handles wrapping for each face of a single wall
+function setUpWallMaterials(timesToRepeatHorizontally, timesToRepeatVertically, loader) {
+    const wallMaterials = [
+        new THREE.MeshPhongMaterial({       //Right face
+            color: "chocolate",
+            map: loader.load("./textures/wall_color_side.png"),
+            normalMap: loader.load("./textures/wall_norm_side.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Left face
+            color: "chocolate",
+            map: loader.load("./textures/wall_color_side.png"),
+            normalMap: loader.load("./textures/wall_norm_side.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Top face
+            color: "chocolate",
+            map: loader.load("./textures/wall_color_top.png"),
+            normalMap: loader.load("./textures/wall_norm_top.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Bottom face
+            color: "chocolate",
+            map: loader.load("./textures/wall_color_top.png"),
+            normalMap: loader.load("./textures/wall_norm_top.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Front face
+            color: "chocolate",
+            map: loader.load("./textures/wall_color.png"),
+            normalMap: loader.load("./textures/wall_norm.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Back face
+            color: "chocolate",
+            map: loader.load("./textures/wall_color.png"),
+            normalMap: loader.load("./textures/wall_norm.png")
+        })
+    ];
+
+    for (let i=2; i < 6; i++) {             //Side faces need no repetitions
+        //Repetitions only horizontally
+        wallMaterials[i].map.wrapS = THREE.RepeatWrapping;
+        wallMaterials[i].normalMap.wrapS = THREE.RepeatWrapping;
+
+        wallMaterials[i].map.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+        wallMaterials[i].normalMap.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    }
+    return wallMaterials;
+}
+
+function setUpDelimitationWallMaterials(timesToRepeatHorizontally, timesToRepeatVertically, loader) {
+    const wallMaterials = [
+        new THREE.MeshPhongMaterial({       //Right face
+            color: "gray",
+            map: loader.load("./textures/wall_color_side.png"),
+            normalMap: loader.load("./textures/wall_norm_side.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Left face
+            color: "gray",
+            map: loader.load("./textures/wall_color_side.png"),
+            normalMap: loader.load("./textures/wall_norm_side.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Top face
+            color: "gray",
+            map: loader.load("./textures/wall_color_top.png"),
+            normalMap: loader.load("./textures/wall_norm_top.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Bottom face
+            color: "gray",
+            map: loader.load("./textures/wall_color_top.png"),
+            normalMap: loader.load("./textures/wall_norm_top.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Front face
+            color: "gray",
+            map: loader.load("./textures/wall_color.png"),
+            normalMap: loader.load("./textures/wall_norm.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Back face
+            color: "gray",
+            map: loader.load("./textures/wall_color.png"),
+            normalMap: loader.load("./textures/wall_norm.png")
+        })
+    ];
+
+    for (let i=0; i < 2; i++) {             //Side faces
+        wallMaterials[i].map.repeat.set(1, timesToRepeatVertically);
+        wallMaterials[i].normalMap.repeat.set(1, timesToRepeatVertically);
+    }
+    for (let i=2; i < 6; i++) {
+        //Repetitions only horizontally
+        wallMaterials[i].map.wrapS = THREE.RepeatWrapping;
+        wallMaterials[i].normalMap.wrapS = THREE.RepeatWrapping;
+
+        wallMaterials[i].map.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+        wallMaterials[i].normalMap.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    }
+    return wallMaterials;
+}
+
+function setUpWhiteWallMaterials(timesToRepeatHorizontally, timesToRepeatVertically, loader) {
+    const wallMaterials = [
+        new THREE.MeshPhongMaterial({       //Right face
+            map: loader.load("./textures/wall_color_side.png"),
+            normalMap: loader.load("./textures/wall_norm_side.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Left face
+            map: loader.load("./textures/wall_color_side.png"),
+            normalMap: loader.load("./textures/wall_norm_side.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Top face
+            map: loader.load("./textures/wall_color_top.png"),
+            normalMap: loader.load("./textures/wall_norm_top.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Bottom face
+            map: loader.load("./textures/wall_color_top.png"),
+            normalMap: loader.load("./textures/wall_norm_top.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Front face
+            map: loader.load("./textures/wall_color.png"),
+            normalMap: loader.load("./textures/wall_norm.png")
+        }),
+        new THREE.MeshPhongMaterial({       //Back face
+            map: loader.load("./textures/wall_color.png"),
+            normalMap: loader.load("./textures/wall_norm.png")
+        })
+    ];
+
+    for (let i=0; i < 2; i++) {             //Side faces
+        wallMaterials[i].map.repeat.set(1, timesToRepeatVertically);
+        wallMaterials[i].normalMap.repeat.set(1, timesToRepeatVertically);
+    }
+    for (let i=2; i < 6; i++) {
+        //Repetitions only horizontally
+        wallMaterials[i].map.wrapS = THREE.RepeatWrapping;
+        wallMaterials[i].normalMap.wrapS = THREE.RepeatWrapping;
+
+        wallMaterials[i].map.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+        wallMaterials[i].normalMap.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    }
+    return wallMaterials;
+}
+
+function setUpTurretMaterials(timesToRepeatHorizontally, timesToRepeatVertically, loader) {
+    const turretMaterials = [
+        new THREE.MeshStandardMaterial({
+            map: loader.load("./textures/stone_wall_color.png"),
+            normalMap: loader.load("./textures/stone_wall_normal.png"),
+            roughnessMap: loader.load("./textures/stone_wall_roughness.png")
+        }),
+        new THREE.MeshStandardMaterial({color: "#504c4c"}),
+        new THREE.MeshStandardMaterial({color: "#504c4c"})
+    ];
+
+    turretMaterials[0].map.wrapS = THREE.RepeatWrapping;
+    turretMaterials[0].map.wrapT = THREE.RepeatWrapping;
+    turretMaterials[0].normalMap.wrapS = THREE.RepeatWrapping;
+    turretMaterials[0].normalMap.wrapT = THREE.RepeatWrapping;
+    turretMaterials[0].roughnessMap.wrapS = THREE.RepeatWrapping;
+    turretMaterials[0].roughnessMap.wrapT = THREE.RepeatWrapping;
+
+    turretMaterials[0].map.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    turretMaterials[0].normalMap.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    turretMaterials[0].roughnessMap.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
+    return turretMaterials;
+}
 
 //Create all the objects in the scene and their physics
 function createMap(scene, world) {
     createLights(scene);
     createGround(scene, world);
-    createBunker(scene, world);
+    createBuilding(scene, world);
     createDelimitationWalls(scene, world);
     createWhiteWall(scene, world);
     createTurrets(scene, world);
@@ -43,21 +258,11 @@ function createLights(scene) {
 }
 
 function createGround(scene, world) {
-    //Ground texture
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load("./textures/grass.png");
-    texture.wrapS = THREE.RepeatWrapping;       //Horizontal wrapping
-    texture.wrapT = THREE.RepeatWrapping;       //Vertical wrapping
-    const timesToRepeat = 8;
-    texture.repeat.set(timesToRepeat, timesToRepeat);
-    const groundMaterial = new THREE.MeshPhongMaterial({map: texture});
-
     //Ground
-    const groundWidth = 45;
     const groundHeight = 0.1
     const y = -groundHeight / 2;
 
-    const groundGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundWidth);    
+    const groundGeometry = new THREE.BoxGeometry(groundWidth, groundHeight, groundWidth);
     const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
     groundMesh.position.y = y;
     groundMesh.receiveShadow = true;
@@ -73,126 +278,47 @@ function createGround(scene, world) {
     world.add(groundBody);
 }
 
-function createBunker(scene, world) {
+function createBuilding(scene, world) {
     //Define all parameters that are useful to define the building
-    const verticalAxis = 13;        //Where to place the bunker on the x axis
-    const horizontalAxis = -8.5;     //Where to place the bunker on the z axis
-    const bunkerWidth = 11;         //Width of north and south walls
-    const bunkerDepth = 18;         //Width of east and west walls
-    const bunkerHeight = 4;
+    const verticalAxis = 13;        //Where to place the building on the x axis
+    const horizontalAxis = -8.5;    //Where to place the building on the z axis
+    const buildingWidth = 11;       //Width of north and south walls
+    const buildingDepth = 18;       //Width of east and west walls
+    const buildingHeight = 4;
     const wallThickness = 0.5;
     const entranceWidth = 2.5;
 
     //I use the parameters above to set the dimensions of the walls and their positions
-    //one with respect to the other - pass also horizontal repetitions of textures
 
     //East wall
-    createBunkerWall(bunkerDepth, bunkerHeight, wallThickness, 3,
-        verticalAxis+bunkerWidth/2+wallThickness/2, bunkerHeight/2, horizontalAxis,
-        scene, world);
+    createBuildingWall(buildingDepth, buildingHeight, wallThickness, Math.PI/2,
+        verticalAxis+buildingWidth/2+wallThickness/2, buildingHeight/2, horizontalAxis,
+        wallMaterialsEast, scene, world);
     //West wall
-    createBunkerWall(bunkerDepth, bunkerHeight, wallThickness, 3,
-        verticalAxis-bunkerWidth/2-wallThickness/2, bunkerHeight/2, horizontalAxis,
-        scene, world);
+    createBuildingWall(buildingDepth, buildingHeight, wallThickness, Math.PI/2,
+        verticalAxis-buildingWidth/2-wallThickness/2, buildingHeight/2, horizontalAxis,
+        wallMaterialsEast, scene, world);
     //North wall    
-    createBunkerWall(bunkerWidth, bunkerHeight, wallThickness, 2,
-        verticalAxis, bunkerHeight/2, horizontalAxis-bunkerDepth/2+wallThickness/2,
-        scene, world);
+    createBuildingWall(buildingWidth, buildingHeight, wallThickness, 0,
+        verticalAxis, buildingHeight/2, horizontalAxis-buildingDepth/2+wallThickness/2,
+        wallMaterialsNorth, scene, world);
     //South wall (west)
-    createBunkerWall((bunkerWidth-entranceWidth)/2, bunkerHeight, wallThickness, 0.75,
-        verticalAxis-entranceWidth/4-bunkerWidth/4, bunkerHeight/2, horizontalAxis+bunkerDepth/2-wallThickness/2,
-        scene, world);
+    createBuildingWall((buildingWidth-entranceWidth)/2, buildingHeight, wallThickness, 0,
+        verticalAxis-entranceWidth/4-buildingWidth/4, buildingHeight/2, horizontalAxis+buildingDepth/2-wallThickness/2,
+        wallMaterialsSouth, scene, world);
     //South wall (east)
-    createBunkerWall((bunkerWidth-entranceWidth)/2, bunkerHeight, wallThickness, 0.75,
-        verticalAxis+entranceWidth/4+bunkerWidth/4, bunkerHeight/2, horizontalAxis+bunkerDepth/2-wallThickness/2,
-        scene, world);
+    createBuildingWall((buildingWidth-entranceWidth)/2, buildingHeight, wallThickness, 0,
+        verticalAxis+entranceWidth/4+buildingWidth/4, buildingHeight/2, horizontalAxis+buildingDepth/2-wallThickness/2,
+        wallMaterialsSouth, scene, world);
 }
 
-//Input params: dimensions - texture horizontal repetitions - coordinates - scene and world
-//Take the dimensions of the wall and its coordinates and create it;
-//timesToRepeatHorizontally also determines the orientation (angle) of the wall:
-// - 3 repetitions for east and west walls (-> 90°)
-// - 2 repetitions for north wall (-> 0°)
-// - 0.75 repetitions for south walls (-> 0°)
-function createBunkerWall(width, height, depth, timesToRepeatHorizontally, x, y, z, scene, world) {
-    const loader = new THREE.TextureLoader();
-
-    //Color texture (one texture for each face)
-    const textureRight = loader.load("./textures/wall_color_side.png");
-    const textureLeft = loader.load("./textures/wall_color_side.png");
-    const textureTop = loader.load("./textures/wall_color_top.png");
-    const textureBottom = loader.load("./textures/wall_color_top.png");
-    const textureFront = loader.load("./textures/wall_color.png");
-    const textureBack = loader.load("./textures/wall_color.png");
-
-    //Repetitions are needed only horizontally - right and left faces need no repetitions
-    textureTop.wrapS = THREE.RepeatWrapping;
-    textureBottom.wrapS = THREE.RepeatWrapping;
-    textureFront.wrapS = THREE.RepeatWrapping;
-    textureBack.wrapS = THREE.RepeatWrapping;
-    const timesToRepeatVertically = 1;
-    textureTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
-    //Normal map (do the same things as before)
-    const normalRight = loader.load("./textures/wall_norm_side.png");
-    const normalLeft = loader.load("./textures/wall_norm_side.png");
-    const normalTop = loader.load("./textures/wall_norm_top.png");
-    const normalBottom = loader.load("./textures/wall_norm_top.png");
-    const normalFront = loader.load("./textures/wall_norm.png");
-    const normalBack = loader.load("./textures/wall_norm.png");
-
-    normalTop.wrapS = THREE.RepeatWrapping;
-    normalBottom.wrapS = THREE.RepeatWrapping;
-    normalFront.wrapS = THREE.RepeatWrapping;
-    normalBack.wrapS = THREE.RepeatWrapping;
-    normalTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
+//Input params: wall dimensions - rotation - coordinates - material with texture - scene and world
+function createBuildingWall(width, height, depth, rotation, x, y, z, materials, scene, world) {
     //Box
     const wallGeometry = new THREE.BoxGeometry(width, height, depth);
-    const wallMaterials = [                  //Color + texture + normal map for each face
-        new THREE.MeshPhongMaterial({
-            color: "chocolate",
-            map: textureRight,
-            normalMap: normalRight
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "chocolate",
-            map: textureLeft,
-            normalMap: normalLeft
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "chocolate",
-            map: textureTop,
-            normalMap: normalTop
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "chocolate",
-            map: textureBottom,
-            normalMap: normalBottom
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "chocolate",
-            map: textureFront,
-            normalMap: normalFront
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "chocolate",
-            map: textureBack,
-            normalMap: normalBack
-        })
-    ];
-    const wallMesh = new THREE.Mesh(wallGeometry, wallMaterials);
+    const wallMesh = new THREE.Mesh(wallGeometry, materials);
     wallMesh.position.set(x, y, z);
-    const rotation = Math.PI / 2;
-    if (timesToRepeatHorizontally == 3) {       //East and west faces
-        wallMesh.rotation.y = rotation;
-    }
+    wallMesh.rotation.y = rotation;
     wallMesh.castShadow = true;
     wallMesh.receiveShadow = true;
 
@@ -202,173 +328,52 @@ function createBunkerWall(width, height, depth, timesToRepeatHorizontally, x, y,
     const wallBody = new CANNON.Body({mass: 0});
     wallBody.addShape(wallShape);
     wallBody.position.set(x, y, z);
-    if (timesToRepeatHorizontally == 3) {       //East and west faces
-        wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
-    }
+    wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
 
     scene.add(wallMesh);
     world.add(wallBody);
 }
 
-//Similar to above, just use position and angle
+//Similar to above, just use position and rotation
 function createDelimitationWalls(scene, world) {
-    createDelimitationWall(0, 22.25, 0, scene, world);              //North
-    createDelimitationWall(0, -22.25, 0, scene, world);             //South
-    createDelimitationWall(22.25, 0, Math.PI / 2, scene, world);    //East
-    createDelimitationWall(-22.25, 0, Math.PI / 2, scene, world);   //West
+    createDelimitationWall(0, (groundWidth - delimitationWallDepth) / 2, 0, scene, world);              //North
+    createDelimitationWall(0, (-groundWidth + delimitationWallDepth) / 2, 0, scene, world);             //South
+    createDelimitationWall((groundWidth - delimitationWallDepth) / 2, 0, Math.PI / 2, scene, world);    //East
+    createDelimitationWall((-groundWidth + delimitationWallDepth) / 2, 0, Math.PI / 2, scene, world);   //West
 }
 
-function createDelimitationWall(x, z, angle, scene, world) {
-    const loader = new THREE.TextureLoader();
-
-    //Color texture (one texture for each face)
-    const textureRight = loader.load("./textures/wall_color_side.png");
-    const textureLeft = loader.load("./textures/wall_color_side.png");
-    const textureTop = loader.load("./textures/wall_color_top.png");
-    const textureBottom = loader.load("./textures/wall_color_top.png");
-    const textureFront = loader.load("./textures/wall_color.png");
-    const textureBack = loader.load("./textures/wall_color.png");
-
-    //Repetitions (only part of the texture is needed vertically)
-    textureTop.wrapS = THREE.RepeatWrapping;
-    textureBottom.wrapS = THREE.RepeatWrapping;
-    textureFront.wrapS = THREE.RepeatWrapping;
-    textureBack.wrapS = THREE.RepeatWrapping;
-    const timesToRepeatHorizontally = 6;
-    const timesToRepeatVertically = 0.58;
-    textureRight.repeat.set(1, timesToRepeatVertically);
-    textureLeft.repeat.set(1, timesToRepeatVertically);
-    textureTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
-    //Normal map (do the same things as before)
-    const normalRight = loader.load("./textures/wall_norm_side.png");
-    const normalLeft = loader.load("./textures/wall_norm_side.png");
-    const normalTop = loader.load("./textures/wall_norm_top.png");
-    const normalBottom = loader.load("./textures/wall_norm_top.png");
-    const normalFront = loader.load("./textures/wall_norm.png");
-    const normalBack = loader.load("./textures/wall_norm.png");
-
-    normalTop.wrapS = THREE.RepeatWrapping;
-    normalBottom.wrapS = THREE.RepeatWrapping;
-    normalFront.wrapS = THREE.RepeatWrapping;
-    normalBack.wrapS = THREE.RepeatWrapping;
-    textureRight.repeat.set(1, timesToRepeatVertically);
-    textureLeft.repeat.set(1, timesToRepeatVertically);
-    normalTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
+function createDelimitationWall(x, z, rotation, scene, world) {
     //Box
     let width;
     const height = 2;
-    const depth = 0.5;
     const y = height / 2;
-    if (angle == 0) {           //North and south walls are wider
-        width = 45;
+    if (rotation == 0) {           //North and south walls are wider
+        width = groundWidth;
     }
     else {
-        width = 44;
+        width = groundWidth - 1;
     }
 
-    const wallGeometry = new THREE.BoxGeometry(width, height, depth);
-    const wallMaterials = [                  //Texture + normal map for each face
-        new THREE.MeshPhongMaterial({
-            color: "gray",
-            map: textureRight,
-            normalMap: normalRight
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "gray",
-            map: textureLeft,
-            normalMap: normalLeft
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "gray",
-            map: textureTop,
-            normalMap: normalTop
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "gray",
-            map: textureBottom,
-            normalMap: normalBottom
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "gray",
-            map: textureFront,
-            normalMap: normalFront
-        }),
-        new THREE.MeshPhongMaterial({
-            color: "gray",
-            map: textureBack,
-            normalMap: normalBack
-        })
-    ];
-    const wallMesh = new THREE.Mesh(wallGeometry, wallMaterials);
+    const wallGeometry = new THREE.BoxGeometry(width, height, delimitationWallDepth);
+    const wallMesh = new THREE.Mesh(wallGeometry, delimitationWallMaterials);
     wallMesh.position.set(x, y, z);
-    wallMesh.rotation.y = angle;
+    wallMesh.rotation.y = rotation;
     wallMesh.castShadow = true;
     wallMesh.receiveShadow = true;
 
     //Box physics
-    const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
+    const halfExtents = new CANNON.Vec3(width / 2, height / 2, delimitationWallDepth / 2);
     const wallShape = new CANNON.Box(halfExtents);
     const wallBody = new CANNON.Body({mass: 0});
     wallBody.addShape(wallShape);
     wallBody.position.set(x, y, z);
-    wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), angle);
+    wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
 
     scene.add(wallMesh);
     world.add(wallBody);
 }
 
 function createWhiteWall(scene, world) {
-    const loader = new THREE.TextureLoader();
-
-    //Color texture (one texture for each face)
-    const textureRight = loader.load("./textures/wall_color_side.png");
-    const textureLeft = loader.load("./textures/wall_color_side.png");
-    const textureTop = loader.load("./textures/wall_color_top.png");
-    const textureBottom = loader.load("./textures/wall_color_top.png");
-    const textureFront = loader.load("./textures/wall_color.png");
-    const textureBack = loader.load("./textures/wall_color.png");
-
-    //Repetitions (only part of the texture is needed vertically)
-    textureTop.wrapS = THREE.RepeatWrapping;
-    textureBottom.wrapS = THREE.RepeatWrapping;
-    textureFront.wrapS = THREE.RepeatWrapping;
-    textureBack.wrapS = THREE.RepeatWrapping;
-    const timesToRepeatHorizontally = 2;
-    const timesToRepeatVertically = 0.58;
-    textureRight.repeat.set(1, timesToRepeatVertically);
-    textureLeft.repeat.set(1, timesToRepeatVertically);
-    textureTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    textureBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
-    //Normal map (do the same things as before)
-    const normalRight = loader.load("./textures/wall_norm_side.png");
-    const normalLeft = loader.load("./textures/wall_norm_side.png");
-    const normalTop = loader.load("./textures/wall_norm_top.png");
-    const normalBottom = loader.load("./textures/wall_norm_top.png");
-    const normalFront = loader.load("./textures/wall_norm.png");
-    const normalBack = loader.load("./textures/wall_norm.png");
-
-    normalTop.wrapS = THREE.RepeatWrapping;
-    normalBottom.wrapS = THREE.RepeatWrapping;
-    normalFront.wrapS = THREE.RepeatWrapping;
-    normalBack.wrapS = THREE.RepeatWrapping;
-    textureRight.repeat.set(1, timesToRepeatVertically);
-    textureLeft.repeat.set(1, timesToRepeatVertically);
-    normalTop.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalBottom.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalFront.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalBack.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
     //Box
     const width = 15;
     const height = 2;
@@ -376,38 +381,12 @@ function createWhiteWall(scene, world) {
     const x = -5;
     const y = height / 2;
     const z = 15;
-    const angle = -Math.PI / 14;
+    const rotation = -Math.PI / 14;
 
     const wallGeometry = new THREE.BoxGeometry(width, height, depth);
-    const wallMaterials = [                  //Texture + normal map for each face
-        new THREE.MeshPhongMaterial({
-            map: textureRight,
-            normalMap: normalRight
-        }),
-        new THREE.MeshPhongMaterial({
-            map: textureLeft,
-            normalMap: normalLeft
-        }),
-        new THREE.MeshPhongMaterial({
-            map: textureTop,
-            normalMap: normalTop
-        }),
-        new THREE.MeshPhongMaterial({
-            map: textureBottom,
-            normalMap: normalBottom
-        }),
-        new THREE.MeshPhongMaterial({
-            map: textureFront,
-            normalMap: normalFront
-        }),
-        new THREE.MeshPhongMaterial({
-            map: textureBack,
-            normalMap: normalBack
-        })
-    ];
-    const wallMesh = new THREE.Mesh(wallGeometry, wallMaterials);
+    const wallMesh = new THREE.Mesh(wallGeometry, whiteWallMaterials);
     wallMesh.position.set(x, y, z);
-    wallMesh.rotation.y = angle;
+    wallMesh.rotation.y = rotation;
     wallMesh.castShadow = true;
     wallMesh.receiveShadow = true;
 
@@ -417,7 +396,7 @@ function createWhiteWall(scene, world) {
     const wallBody = new CANNON.Body({mass: 0});
     wallBody.addShape(wallShape);
     wallBody.position.set(x, y, z);
-    wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), angle);
+    wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
 
     scene.add(wallMesh);
     world.add(wallBody);
@@ -429,39 +408,10 @@ function createTurrets(scene, world) {
 }
 
 function createTurret(x, z, scene, world) {
-    //Color, normal and roughness maps
-    const loader = new THREE.TextureLoader();
-    const colorTexture = loader.load("./textures/stone_wall_color.png");
-    const normalTexture = loader.load("./textures/stone_wall_normal.png");
-    const roughnessTexture = loader.load("./textures/stone_wall_roughness.png");
-
-    //Repetitions
-    colorTexture.wrapS = THREE.RepeatWrapping;
-    normalTexture.wrapS = THREE.RepeatWrapping;
-    roughnessTexture.wrapS = THREE.RepeatWrapping;
-    colorTexture.wrapT = THREE.RepeatWrapping;
-    normalTexture.wrapT = THREE.RepeatWrapping;
-    roughnessTexture.wrapT = THREE.RepeatWrapping;
-    const timesToRepeatHorizontally = 2;
-    const timesToRepeatVertically = 3;
-    colorTexture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    normalTexture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-    roughnessTexture.repeat.set(timesToRepeatHorizontally, timesToRepeatVertically);
-
-    const turretMaterials = [
-        new THREE.MeshStandardMaterial({
-            map: colorTexture,
-            normalMap: normalTexture,
-            roughnessMap: roughnessTexture
-        }),
-        new THREE.MeshPhongMaterial({color: "#504c4c"}),
-        new THREE.MeshPhongMaterial({color: "#504c4c"})
-    ];
-
     //Cylinder
     const turretRadius = 1.2;
     const turretHeight = 6;
-    const turretRadialSegments = 16;
+    const turretRadialSegments = 24;
     const y = turretHeight / 2;
 
     const turretGeometry = new THREE.CylinderGeometry(turretRadius, turretRadius, turretHeight, turretRadialSegments);
@@ -482,28 +432,28 @@ function createTurret(x, z, scene, world) {
 }
 
 function createBarrels(scene, world) {
-    importBarrel(17, -7, 0, 0, scene, world);
-    importBarrel(-18.3, 4.8, -Math.PI/2, 0, scene, world);
-    importBarrel(-16.5, 2, Math.PI, 0, scene, world);
-    importBarrel(-15, 2.8, 0, 1, scene, world);
-    importBarrel(-14, 7, Math.PI/3, 0, scene, world);
+    importBarrel(17, -7, 0, false, scene, world);
+    importBarrel(-18.3, 4.8, -Math.PI/2, false, scene, world);
+    importBarrel(-16.5, 2, Math.PI, false, scene, world);
+    importBarrel(-15, 2.8, 0, true, scene, world);
+    importBarrel(-14, 7, Math.PI/3, false, scene, world);
 }
 
 //Import the barrel model, apply its texture and place it in the scene;
-//then take the barrel's sizes and use them to create its physics
-//type = 0 -> closed barrel; type = 1 -> barrel with water
-function importBarrel(x, z, rotation, type, scene, world) {
-    //Load barrel texture
-    const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load("./textures/barrel_" + type + ".png");
-    const material = new THREE.MeshPhongMaterial({map: texture});
-
+//then take the barrel's sizes and use them to create its physics.
+//waterBarrel selects the material
+function importBarrel(x, z, rotation, waterBarrel, scene, world) {
     //Load barrel and apply texture
     const objLoader = new OBJLoader();
     objLoader.load("./models/barrel.obj", (object) => {
         object.traverse((node) => {       //Need to traverse the object (it's a simple one in this case)
             if (node.isMesh) {
-                node.material = material;
+                if (waterBarrel) {
+                    node.material = waterBarrelMaterial;
+                }
+                else {
+                    node.material = barrelMaterial;
+                }
                 node.castShadow = true;
                 node.receiveShadow = true;
             }
@@ -527,7 +477,7 @@ function importBarrel(x, z, rotation, type, scene, world) {
         boxBody.position.set(x, y, z);
         boxBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 
-        object.rotation.y = rotation;
+        object.rotation.y = rotation;           //Do it only now otherwise bounding boxes are all different
         scene.add(object);
         world.add(boxBody)
     });
@@ -543,10 +493,6 @@ function createTrees(scene, world) {
 //Place the tree in the given coordinates
 function createTree(x, z, scene, world) {
     //Trunk
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load("./textures/trunk.png");
-    const trunkMaterial = new THREE.MeshPhongMaterial({map: texture});
-
     const trunkRadius = 0.45;
     const trunkHeight = 5.5;
     const trunkRadialSegments = 10;
@@ -566,7 +512,7 @@ function createTree(x, z, scene, world) {
 
     //Foliage (no physics: only the trunk is "solid")
     const foliageRadius = 2.7;
-    const detail = 5;
+    const detail = 6;
     const foliageGeometry = new THREE.TetrahedronGeometry(foliageRadius, detail);
     const foliageMaterial = new THREE.MeshPhongMaterial({color: "green"});
     const foliageMesh = new THREE.Mesh(foliageGeometry, foliageMaterial);
@@ -601,4 +547,4 @@ function createBottomPlanes(scene, world) {
     world.add(planeBody);
 }
 
-export {createMap};
+export {load, createMap};

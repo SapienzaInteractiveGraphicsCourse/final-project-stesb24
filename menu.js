@@ -1,4 +1,4 @@
-import {main} from "./game.js";
+import {load} from "./map.js";
 import {instructions} from "./instructions.js";
 
 function menu() {
@@ -15,7 +15,7 @@ function menu() {
     const newGameButton = document.createElement("button");
     newGameButton.setAttribute("class", "menu-button");
     newGameButton.innerText = "New game";
-    newGameButton.onclick = main;
+    newGameButton.onclick = load;
     document.body.appendChild(newGameButton);
 
     const howToPlayButton = document.createElement("button");
