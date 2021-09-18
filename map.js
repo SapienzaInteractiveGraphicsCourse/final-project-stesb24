@@ -16,6 +16,11 @@ const delimitationWallDepth = 0.5;
 
 function load() {
     console.log("Loading started");
+    document.body.innerHTML = "";
+    const title = document.createElement("t");
+    title.innerText = "Loading...";
+    document.body.appendChild(title);
+
     const loadManager = new THREE.LoadingManager();
     const loader = new THREE.TextureLoader(loadManager);
 
@@ -50,8 +55,10 @@ function load() {
     const trunkTexture = loader.load("./textures/trunk.png");
     trunkMaterial = new THREE.MeshPhongMaterial({map: trunkTexture});
 
-    console.log("Loading completed");
-    loadManager.onLoad = () => main();
+    loadManager.onLoad = () => {
+        console.log("Loading completed");
+        main();
+    }
 }
 
 //Loads textures and handles wrapping for each face of a single wall
