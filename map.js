@@ -52,6 +52,8 @@ function load() {
 
     //Trunk
     const trunkTexture = loader.load("./textures/trunk.png");
+    trunkTexture.wrapT = THREE.RepeatWrapping;
+    trunkTexture.repeat.set(1, 2);
     trunkMaterial = new THREE.MeshPhongMaterial({map: trunkTexture});
 
     loadManager.onLoad = () => main();

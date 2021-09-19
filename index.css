@@ -99,7 +99,7 @@ subtitle {              /*Also used for the rules*/
     display: none; 
 }
 
-#gameOver {             /*Tells who won - used also for the pause menu*/
+#gameOver {             /*Tells who won*/
     position: absolute;
     top: 45%;
     left: 50%;
