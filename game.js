@@ -68,7 +68,7 @@ function main() {
     scene.background = new THREE.Color("skyblue");
 
     //World physics (gravity)
-    const world = new CANNON.World();
+    let world = new CANNON.World();
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
@@ -470,7 +470,7 @@ function main() {
                 }
             });
         }
-        if (missed) {                       //Missed
+        if (missed) {                           //Missed
             document.querySelector("#hit").innerHTML = "You missed!";
             document.querySelector("#hit").style.display = "block";
         }
@@ -530,7 +530,7 @@ function main() {
         const rotation = 0.02;
 
         //No if-else so that you can use them together
-        
+
         if (!moveForward && !moveBackward) {
             currentRobot.body.velocity.set(0, 0, 0);
         }
@@ -578,7 +578,10 @@ function main() {
     }
 
     function gameOver(team) {                   //Victory screen
-        const gui = document.querySelector("#gameOver");        //Create game over message with buttons
+        document.removeEventListener("keydown", handleKeyDown);     //Remove listeners
+        document.removeEventListener("keyup", handleKeyUp);
+
+        const gui = document.querySelector("#gameOver");            //Create game over message with buttons
         gui.innerHTML = team + " TEAM WINS! <br>"+
                         "<button class=end-button id=newGame>New game</button>" +
                         "<button class=end-button id=mainMenu>Main menu</button> <br>";
@@ -601,9 +604,6 @@ function main() {
         gui.style.display = "block";
 
         function resetGame() {
-            document.removeEventListener("keydown", handleKeyDown);     //Remove listeners
-            document.removeEventListener("keyup", handleKeyUp);
-            
             while (scene.children.length > 0) {
                 scene.remove(scene.children[0]);
             }
@@ -613,7 +613,7 @@ function main() {
             world = null;
         }
     }
-    
+
     //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
     function render() {
