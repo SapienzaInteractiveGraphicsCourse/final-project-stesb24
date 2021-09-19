@@ -7,7 +7,7 @@ import {makeCamera, resizeRendererToDisplaySize, resizeAspect} from "./utils.js"
 let renderer;
 
 const numTeams = 2;
-const robotsPerTeam = 1;
+const robotsPerTeam = 4;
 let numRedRobots;               //How many red robots are left
 let numBlueRobots;              //How many blue robots are left
 
@@ -22,7 +22,7 @@ let nextRed;                    //True = a red robot will play the next turn, fa
 let bullets;                    //Array of all bullets
 let bulletBodies;
 
-const turnTime = 1115;
+const turnTime = 15;
 
 //Prepare html after coming from the menu
 function setUpDocument() {
@@ -64,11 +64,11 @@ function setUpDocument() {
 function main() {
     setUpDocument();
 
-    let scene = new THREE.Scene();
+    const scene = new THREE.Scene();
     scene.background = new THREE.Color("skyblue");
 
     //World physics (gravity)
-    let world = new CANNON.World();
+    const world = new CANNON.World();
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
@@ -530,6 +530,7 @@ function main() {
         const rotation = 0.02;
 
         //No if-else so that you can use them together
+        
         if (!moveForward && !moveBackward) {
             currentRobot.body.velocity.set(0, 0, 0);
         }

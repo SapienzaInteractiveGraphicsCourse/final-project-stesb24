@@ -42,7 +42,7 @@ class Robot {
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene, world) {
-        this.health = 1;
+        this.health = 3;
         this.team;
         this.id = robotNumber;
 
