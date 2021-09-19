@@ -7,7 +7,7 @@ import {makeCamera, resizeRendererToDisplaySize, resizeAspect} from "./utils.js"
 let renderer;
 
 const numTeams = 2;
-const robotsPerTeam = 4;
+const robotsPerTeam = 1;
 let numRedRobots;               //How many red robots are left
 let numBlueRobots;              //How many blue robots are left
 
@@ -22,7 +22,7 @@ let nextRed;                    //True = a red robot will play the next turn, fa
 let bullets;                    //Array of all bullets
 let bulletBodies;
 
-const turnTime = 15;
+const turnTime = 1115;
 
 //Prepare html after coming from the menu
 function setUpDocument() {
@@ -64,11 +64,11 @@ function setUpDocument() {
 function main() {
     setUpDocument();
 
-    const scene = new THREE.Scene();
+    let scene = new THREE.Scene();
     scene.background = new THREE.Color("skyblue");
 
     //World physics (gravity)
-    const world = new CANNON.World();
+    let world = new CANNON.World();
     world.gravity.set(0, -9.81, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
@@ -133,7 +133,10 @@ function main() {
     let charging = false;               //True = charging the shot
     let waitForCollision = false;       //True = shot fired -> don't act and wait for next turn
 
-    document.addEventListener("keydown", e => {
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+    
+    function handleKeyDown(e) {
         switch (e.code) {
             //Move or shoot only if you haven't shot yet (= !waitForCollision)
             case "KeyW":
@@ -252,9 +255,9 @@ function main() {
                 }
                 break;
         }
-    });
+    }
 
-    document.addEventListener("keyup", e => {
+    function handleKeyUp(e) {
         switch (e.code) {
             case "KeyW":
             case "ArrowUp":
@@ -292,7 +295,7 @@ function main() {
                 charging = false;           //Stop charging
                 break;
         }
-    });
+    }
 
     countdown();
 
@@ -527,7 +530,6 @@ function main() {
         const rotation = 0.02;
 
         //No if-else so that you can use them together
-
         if (!moveForward && !moveBackward) {
             currentRobot.body.velocity.set(0, 0, 0);
         }
@@ -575,21 +577,40 @@ function main() {
     }
 
     function gameOver(team) {                   //Victory screen
-        const gui = document.querySelector("#gameOver");
+        const gui = document.querySelector("#gameOver");        //Create game over message with buttons
         gui.innerHTML = team + " TEAM WINS! <br>"+
                         "<button class=end-button id=newGame>New game</button>" +
                         "<button class=end-button id=mainMenu>Main menu</button> <br>";
         gui.style.color = team;
 
         const newGameButton = document.querySelector("#newGame");
-        newGameButton.onclick = main;
         newGameButton.style.backgroundColor = team;
+        newGameButton.onclick = () => {
+            resetGame();
+            main();
+        }
 
         const menuButton = document.querySelector("#mainMenu");
-        menuButton.onclick = menu;
         menuButton.style.backgroundColor = team;
+        menuButton.onclick = () => {
+            resetGame();
+            menu();
+        }
 
         gui.style.display = "block";
+
+        function resetGame() {
+            document.removeEventListener("keydown", handleKeyDown);     //Remove listeners
+            document.removeEventListener("keyup", handleKeyUp);
+            
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+            while (world.bodies.length > 0) {
+                world.removeBody(world.bodies[0]);
+            }
+            world = null;
+        }
     }
     
     //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);

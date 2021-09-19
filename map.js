@@ -15,7 +15,6 @@ const groundWidth = 45;
 const delimitationWallDepth = 0.5;
 
 function load() {
-    console.log("Loading started");
     document.body.innerHTML = "";
     const title = document.createElement("t");
     title.innerText = "Loading...";
@@ -55,10 +54,7 @@ function load() {
     const trunkTexture = loader.load("./textures/trunk.png");
     trunkMaterial = new THREE.MeshPhongMaterial({map: trunkTexture});
 
-    loadManager.onLoad = () => {
-        console.log("Loading completed");
-        main();
-    }
+    loadManager.onLoad = () => main();
 }
 
 //Loads textures and handles wrapping for each face of a single wall
@@ -282,7 +278,7 @@ function createGround(scene, world) {
     groundBody.position.y = y;
 
     scene.add(groundMesh);
-    world.add(groundBody);
+    world.addBody(groundBody);
 }
 
 function createBuilding(scene, world) {
@@ -338,7 +334,7 @@ function createBuildingWall(width, height, depth, rotation, x, y, z, materials, 
     wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
 
     scene.add(wallMesh);
-    world.add(wallBody);
+    world.addBody(wallBody);
 }
 
 //Similar to above, just use position and rotation
@@ -377,7 +373,7 @@ function createDelimitationWall(x, z, rotation, scene, world) {
     wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
 
     scene.add(wallMesh);
-    world.add(wallBody);
+    world.addBody(wallBody);
 }
 
 function createWhiteWall(scene, world) {
@@ -406,7 +402,7 @@ function createWhiteWall(scene, world) {
     wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), rotation);
 
     scene.add(wallMesh);
-    world.add(wallBody);
+    world.addBody(wallBody);
 }
 
 function createTurrets(scene, world) {
@@ -435,7 +431,7 @@ function createTurret(x, z, scene, world) {
     turretBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 
     scene.add(turretMesh);
-    world.add(turretBody);
+    world.addBody(turretBody);
 }
 
 function createBarrels(scene, world) {
@@ -486,7 +482,7 @@ function importBarrel(x, z, rotation, waterBarrel, scene, world) {
 
         object.rotation.y = rotation;           //Do it only now otherwise bounding boxes are all different
         scene.add(object);
-        world.add(boxBody)
+        world.addBody(boxBody)
     });
 }
 
@@ -529,7 +525,7 @@ function createTree(x, z, scene, world) {
     
     scene.add(trunkMesh);
     scene.add(foliageMesh);
-    world.add(trunkBody);
+    world.addBody(trunkBody);
 }
 
 //Invisible planes placed at negative y for bullets
@@ -551,7 +547,7 @@ function createBottomPlanes(scene, world) {
     planeBody.addShape(planeShape);
     planeBody.position.y = y - 2;
     planeBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-    world.add(planeBody);
+    world.addBody(planeBody);
 }
 
 export {load, createMap};

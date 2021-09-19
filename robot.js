@@ -42,7 +42,7 @@ class Robot {
     //thirdPersonCamera, firstPersonCamera
 
     constructor(robotNumber, scene, world) {
-        this.health = 3;
+        this.health = 1;
         this.team;
         this.id = robotNumber;
 
@@ -206,7 +206,7 @@ class Robot {
         this.body.angularDamping = 1;       //The body remains closer to the robot when rotating
 
         scene.add(this.waist);
-        world.add(this.body);
+        world.addBody(this.body);
 
         this.currentTween;          //Current animation
     }
