@@ -407,7 +407,7 @@ function main() {
         bulletBody.addShape(bulletShape);
 
         //Break the shot vector over the three axes
-        const effectivePower = power * 3.5;             //Scale up the power (or else too weak)
+        const effectivePower = power * 3.8;             //Scale up the power (or else too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
         const powerY = effectivePower * Math.sin(verticalAngle);
@@ -523,7 +523,7 @@ function main() {
 
     //Move the robot (applying forces in case)
     function move() {
-        const speed = 2.8;
+        const speed = 2.9;
         //Speed over x and z and how much the robot rotates
         const speedX = Math.sin(currentRobot.waist.rotation.y) * speed;
         const speedZ = Math.cos(currentRobot.waist.rotation.y) * speed;

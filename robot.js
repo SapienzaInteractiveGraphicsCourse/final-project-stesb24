@@ -3,8 +3,8 @@ import {makeCamera} from "./utils.js";
 
 //i-th value is the initial (x, z) position and angle of the i-th robot
 const initialCoordinates = [
-    [5, -10, Math.PI], [-18.5, -4, -Math.PI/2], [-16.2, -21.5, -0.75*Math.PI], [2.4, 24.5, 0],
-    [24, 18, Math.PI/4], [21.5, -10.5, Math.PI], [-23, 19.5, -Math.PI/4], [24, -23.7, Math.PI/2]
+    [5, -10, Math.PI], [-18.5, -4, -Math.PI/2], [24, 18, Math.PI/4], [24, -23.7, Math.PI/2],
+    [-23, 19.5, -Math.PI/4], [21.5, -10.5, Math.PI], [-16.2, -21.5, -0.75*Math.PI], [2.4, 22.8, 0],
 ];
 
 //Robot sizes
