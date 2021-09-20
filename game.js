@@ -22,7 +22,7 @@ let nextRed;                    //True = a red robot will play the next turn, fa
 let bullets;                    //Array of all bullets
 let bulletBodies;
 
-const turnTime = 15;
+const turnTime = 20;
 
 //Prepare html after coming from the menu
 function setUpDocument() {
@@ -100,8 +100,8 @@ function main() {
     };
 
     //Detached camera looking from above
-    const globalCamera = makeCamera(25, 55);
-    globalCamera.position.y = 52;
+    const globalCamera = makeCamera(30, 75);
+    globalCamera.position.y = 68;
     globalCamera.lookAt(0, 0, 0);
 
     //First robot to play
@@ -407,7 +407,7 @@ function main() {
         bulletBody.addShape(bulletShape);
 
         //Break the shot vector over the three axes
-        const effectivePower = power * 2.5;             //Scale up the power (or else too weak)
+        const effectivePower = power * 3.5;             //Scale up the power (or else too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
         const powerY = effectivePower * Math.sin(verticalAngle);
@@ -523,7 +523,7 @@ function main() {
 
     //Move the robot (applying forces in case)
     function move() {
-        const speed = 3.3;
+        const speed = 2.8;
         //Speed over x and z and how much the robot rotates
         const speedX = Math.sin(currentRobot.waist.rotation.y) * speed;
         const speedZ = Math.cos(currentRobot.waist.rotation.y) * speed;

@@ -11,7 +11,7 @@ let turretMaterials;
 let barrelMaterial, waterBarrelMaterial;
 let trunkMaterial;
 
-const groundWidth = 45;
+const groundWidth = 60;
 const delimitationWallDepth = 0.5;
 
 function load() {
@@ -27,7 +27,7 @@ function load() {
     const grassTexture = loader.load("./textures/grass.png");
     grassTexture.wrapS = THREE.RepeatWrapping;                  //Horizontal wrapping
     grassTexture.wrapT = THREE.RepeatWrapping;                  //Vertical wrapping
-    grassTexture.repeat.set(8, 8);
+    grassTexture.repeat.set(10, 10);
     groundMaterial = new THREE.MeshPhongMaterial({map: grassTexture});
 
     //Building walls
@@ -36,13 +36,13 @@ function load() {
     wallMaterialsSouth = setUpWallMaterials(0.75, 1, loader);    //South walls
 
     //Delimitation wall
-    delimitationWallMaterials = setUpDelimitationWallMaterials(6, 0.58, loader);
+    delimitationWallMaterials = setUpDelimitationWallMaterials(9, 0.58, loader);
 
     //White wall
-    whiteWallMaterials = setUpWhiteWallMaterials(2, 0.58, loader);
+    whiteWallMaterials = setUpWhiteWallMaterials(3, 0.58, loader);
 
     //Turret
-    turretMaterials = setUpTurretMaterials(2, 3, loader);
+    turretMaterials = setUpTurretMaterials(3, 4, loader);
 
     //Barrel
     const barrelTexture = loader.load("./textures/barrel_0.png");
@@ -227,7 +227,7 @@ function createMap(scene, world) {
     createGround(scene, world);
     createBuilding(scene, world);
     createDelimitationWalls(scene, world);
-    createWhiteWall(scene, world);
+    createWhiteWalls(scene, world);
     createTurrets(scene, world);
     createBarrels(scene, world);
     createTrees(scene, world);
@@ -237,19 +237,19 @@ function createMap(scene, world) {
 function createLights(scene) {
     //Directional light (sun)
     const lightColor = "white";
-    const intensityDir = 1;
+    const intensityDir = 0.85;
     const directionalLight = new THREE.DirectionalLight(lightColor, intensityDir);
-    directionalLight.position.set(-20, 30, -1.5);
+    directionalLight.position.set(-20, 30, -5);
     directionalLight.target.position.set(0, 0, 0);
 
     //Shadow camera
     directionalLight.castShadow = true;
-    directionalLight.shadow.camera.near = 12;
-    directionalLight.shadow.camera.far = 50;
-    directionalLight.shadow.camera.bottom = -20;
-    directionalLight.shadow.camera.top = 20;
-    directionalLight.shadow.camera.left = -27;
-    directionalLight.shadow.camera.right = 27;
+    directionalLight.shadow.camera.near = 14;
+    directionalLight.shadow.camera.far = 57;
+    directionalLight.shadow.camera.bottom = -30;
+    directionalLight.shadow.camera.top = 31;
+    directionalLight.shadow.camera.left = -37;
+    directionalLight.shadow.camera.right = 37;
     directionalLight.shadow.mapSize.width = 5120;
     directionalLight.shadow.mapSize.width = 5120;
 
@@ -285,7 +285,7 @@ function createGround(scene, world) {
 
 function createBuilding(scene, world) {
     //Define all parameters that are useful to define the building
-    const verticalAxis = 13;        //Where to place the building on the x axis
+    const verticalAxis = 18.5;        //Where to place the building on the x axis
     const horizontalAxis = -8.5;    //Where to place the building on the z axis
     const buildingWidth = 11;       //Width of north and south walls
     const buildingDepth = 18;       //Width of east and west walls
@@ -378,15 +378,18 @@ function createDelimitationWall(x, z, rotation, scene, world) {
     world.addBody(wallBody);
 }
 
-function createWhiteWall(scene, world) {
+function createWhiteWalls(scene, world) {
+    createWhiteWall(-20, 18, Math.PI / 2, scene, world);
+    createWhiteWall(-2, 22, Math.PI / 14, scene, world);
+    createWhiteWall(2, -11, Math.PI / 4, scene, world);
+}
+
+function createWhiteWall(x, z, rotation, scene, world) {
     //Box
-    const width = 15;
+    const width = 18;
     const height = 2;
     const depth = 0.45;
-    const x = -5;
     const y = height / 2;
-    const z = 15;
-    const rotation = -Math.PI / 14;
 
     const wallGeometry = new THREE.BoxGeometry(width, height, depth);
     const wallMesh = new THREE.Mesh(wallGeometry, whiteWallMaterials);
@@ -408,15 +411,17 @@ function createWhiteWall(scene, world) {
 }
 
 function createTurrets(scene, world) {
-    createTurret(2, -6, scene, world);
-    createTurret(-3, -10, scene, world);
+    createTurret(-10, 11, scene, world);
+    createTurret(2, -0.5, scene, world);
+    createTurret(8.5, 3.5, scene, world);
+    createTurret(16, -25, scene, world);
 }
 
 function createTurret(x, z, scene, world) {
     //Cylinder
-    const turretRadius = 1.2;
-    const turretHeight = 6;
-    const turretRadialSegments = 24;
+    const turretRadius = 1.8;
+    const turretHeight = 10;
+    const turretRadialSegments = 30;
     const y = turretHeight / 2;
 
     const turretGeometry = new THREE.CylinderGeometry(turretRadius, turretRadius, turretHeight, turretRadialSegments);
@@ -437,11 +442,17 @@ function createTurret(x, z, scene, world) {
 }
 
 function createBarrels(scene, world) {
-    importBarrel(17, -7, 0, false, scene, world);
-    importBarrel(-18.3, 4.8, -Math.PI/2, false, scene, world);
-    importBarrel(-16.5, 2, Math.PI, false, scene, world);
-    importBarrel(-15, 2.8, 0, true, scene, world);
-    importBarrel(-14, 7, Math.PI/3, false, scene, world);
+    importBarrel(-21.3, -4.2, -Math.PI/2, false, scene, world);
+    importBarrel(-20.5, -2, 0, false, scene, world);
+    importBarrel(-19.5, -7, Math.PI, false, scene, world);
+    importBarrel(-18.8, -1.5, -Math.PI/4, false, scene, world);
+    importBarrel(-16.5, -5.8, 0, true, scene, world);
+    importBarrel(-15.5, -4, Math.PI/3, false, scene, world);
+    importBarrel(15, -16, Math.PI/2, true, scene, world);
+    importBarrel(16.8, -16, -Math.PI/3, false, scene, world);
+    importBarrel(20, 17.2, 0, false, scene, world);
+    importBarrel(20, 19, 0, false, scene, world);
+    importBarrel(23, -7, 0, false, scene, world);
 }
 
 //Import the barrel model, apply its texture and place it in the scene;
@@ -489,10 +500,14 @@ function importBarrel(x, z, rotation, waterBarrel, scene, world) {
 }
 
 function createTrees(scene, world) {
-    createTree(-9, -15, scene, world);
-    createTree(-15, -12, scene, world);
-    createTree(-2, 2, scene, world);
-    createTree(9, 12, scene, world);
+    createTree(-22, -21, scene, world);
+    createTree(-17.5, -24, scene, world);
+    createTree(-16, -18.8, scene, world);
+    createTree(-11.5, -21.5, scene, world);
+    createTree(-5.5, 2, scene, world);
+    createTree(13, 20, scene, world);
+    createTree(20, 12, scene, world);
+    createTree(26.5, -8, scene, world);
 }
 
 //Place the tree in the given coordinates
