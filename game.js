@@ -407,7 +407,7 @@ function main() {
         bulletBody.addShape(bulletShape);
 
         //Break the shot vector over the three axes
-        const effectivePower = power * 3.8;             //Scale up the power (or else too weak)
+        const effectivePower = power * 3.5;             //Scale up the power (or else too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
         const powerY = effectivePower * Math.sin(verticalAngle);
