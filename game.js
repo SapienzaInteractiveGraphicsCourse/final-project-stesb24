@@ -202,8 +202,8 @@ function main() {
                     if (!global) {              //Switch to global camera
                         if (firstPerson) {      //If aiming, go back to idle
                             currentRobot.aimToIdle();
-                            document.querySelector("#crosshair").style.display = "none"   //Remove gui
-                            document.querySelector("#power").style.display = "none"
+                            document.querySelector("#crosshair").style.display = "none";  //Remove gui
+                            document.querySelector("#power").style.display = "none";
                         }
                         global = true;
                         firstPerson = false;
@@ -233,8 +233,8 @@ function main() {
                         camera = currentRobot.firstPersonCamera;
 
                         //Display gui
-                        document.querySelector("#crosshair").style.display = "block"
-                        document.querySelector("#power").style.display = "block"
+                        document.querySelector("#crosshair").style.display = "block";
+                        document.querySelector("#power").style.display = "block";
                     }
                     else {                  //Switch back to third person camera
                         //Reset all aiming flags
@@ -249,8 +249,8 @@ function main() {
                         camera = currentRobot.thirdPersonCamera;
 
                         //Remove gui
-                        document.querySelector("#crosshair").style.display = "none"
-                        document.querySelector("#power").style.display = "none"
+                        document.querySelector("#crosshair").style.display = "none";
+                        document.querySelector("#power").style.display = "none";
                     }
                 }
                 break;
@@ -365,8 +365,8 @@ function main() {
 
             if (!charging || power >= 10) {     //Stopped charging or max charge
                 //Remove gui
-                document.querySelector("#crosshair").style.display = "none"
-                document.querySelector("#power").style.display = "none"
+                document.querySelector("#crosshair").style.display = "none";
+                document.querySelector("#power").style.display = "none";
                 camera = currentRobot.thirdPersonCamera;
                 clearInterval(interval);        //Stop loop
 
@@ -407,7 +407,7 @@ function main() {
         bulletBody.addShape(bulletShape);
 
         //Break the shot vector over the three axes
-        const effectivePower = power * 3.5;             //Scale up the power (or else too weak)
+        const effectivePower = power * 3.6;             //Scale up the power (or else too weak)
         const horizontalAngle = currentRobot.waist.rotation.y;
         const verticalAngle = currentRobot.head.rotation.x;
         const powerY = effectivePower * Math.sin(verticalAngle);

@@ -285,7 +285,7 @@ function createGround(scene, world) {
 
 function createBuilding(scene, world) {
     //Define all parameters that are useful to define the building
-    const verticalAxis = 18.5;        //Where to place the building on the x axis
+    const verticalAxis = 18.5;      //Where to place the building on the x axis
     const horizontalAxis = -8.5;    //Where to place the building on the z axis
     const buildingWidth = 11;       //Width of north and south walls
     const buildingDepth = 18;       //Width of east and west walls
@@ -495,7 +495,7 @@ function importBarrel(x, z, rotation, waterBarrel, scene, world) {
 
         object.rotation.y = rotation;           //Do it only now otherwise bounding boxes are all different
         scene.add(object);
-        world.addBody(boxBody)
+        world.addBody(boxBody);
     });
 }
 

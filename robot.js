@@ -4,7 +4,7 @@ import {makeCamera} from "./utils.js";
 //i-th value is the initial (x, z) position and angle of the i-th robot
 const initialCoordinates = [
     [5, -10, Math.PI], [-18.5, -4, -Math.PI/2], [24, 18, Math.PI/4], [24, -23.7, Math.PI/2],
-    [-23, 19.5, -Math.PI/4], [21.5, -10.5, Math.PI], [-16.2, -21.5, -0.75*Math.PI], [2.4, 22.8, 0],
+    [-23, 19.5, -Math.PI/4], [21.5, -10.5, Math.PI], [-16.2, -21.5, -0.75*Math.PI], [2.4, 22.8, 0]
 ];
 
 //Robot sizes
@@ -44,7 +44,6 @@ class Robot {
     constructor(robotNumber, scene, world) {
         this.health = 3;
         this.team;
-        this.id = robotNumber;
 
         const material = new THREE.MeshPhongMaterial();
         const sphereMaterial = new THREE.MeshPhongMaterial({color: "#474544"});
@@ -139,7 +138,7 @@ class Robot {
         this.rightLowerArm.position.y = -armHeight / 2;
 
         const handOffsetY = 0.22;
-        this.rightHand = new THREE.Object3D()           //This is used to know where the bullet is shot from
+        this.rightHand = new THREE.Object3D();          //This is used to know where the bullet is shot from
         this.rightHand.position.y = -armHeight / 2 - handOffsetY;
 
         //Head (torso's child)
@@ -363,7 +362,7 @@ class Robot {
             .to([{y: -Math.PI/12}, {z: Math.PI/8}, {x: Math.PI/2}], 150)
             .easing(TWEEN.Easing.Exponential.Out).start();
 
-        shootTween.onComplete(() => this.aimToIdle(540, 150))
+        shootTween.onComplete(() => this.aimToIdle(540, 150));
     }
 
     idle() {                        //Up and down with torso
@@ -414,7 +413,7 @@ class Robot {
             .easing(TWEEN.Easing.Quadratic.Out);
         
         this.currentTween.chain(originalPosition);
-        originalPosition.onComplete(() => this.idle())
+        originalPosition.onComplete(() => this.idle());
 
         this.currentTween.start();
     }

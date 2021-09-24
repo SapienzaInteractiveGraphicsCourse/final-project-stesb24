@@ -18,7 +18,7 @@ function instructions() {
 
     const list = document.createElement("subtitle");
     list.innerHTML =
-    "<ul><li>move with WASD or arrow keys; if you are in first person view, use them to take the aim instead;</li>" +
+    "<ul><li>move with WASD or ARROW KEYS; if you are in first person view, use them to take the aim instead;</li>" +
     "<li>press E once to view the whole map from above, press again to go back to third person;</li>" +
     "<li>press Q once for the first person mode, from which you can take the aim and shoot; press again " +
     "to go back to third person;</li><li>while in first person view, hold SPACEBAR to charge up the shot (the more you " +
@@ -31,8 +31,8 @@ function instructions() {
     "After shooting, your turn ends and you can't act anymore (but you can still look from above); the enemy team's " +
     "turn will start after a little while.<br><br>Each robot has three lives, and every time they are hit by a bullet " +
     "they lose one life. Hit a robot three times to deactivate it, but try not to shoot at your own robots!<br>" +
-    "Be careful: bullets won't deal damage after hitting something, so you should aim straight to a robot. " +
-    "Bounces are not valid!";
+    "Be careful: bullets deal damage only once. This means that they won't deal further damage after the first time they " +
+    "hit something, so you should aim straight to a robot. Bounces are not valid!";
     document.body.appendChild(end);
 
     const backButton = document.createElement("button");
