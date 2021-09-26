@@ -617,17 +617,6 @@ function main() {
     function render() {
         //Step the physics world
         world.step(1/60);
-        
-        //DEBUG
-        /*let r = [];
-        console.log("Current red IDs: ")
-        redRobots.forEach(robot => r.push(robot.id));
-        console.log(r)
-        let b = [];
-        console.log("Current blue IDs: ")
-        blueRobots.forEach(robot => b.push(robot.id));
-        console.log(b)
-        console.log("CURRENT ID: " + currentRobot.id)*/
 
         //Move the robot
         move();
