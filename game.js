@@ -614,12 +614,9 @@ function main() {
         }
     }
 
-    //const cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
-
     function render() {
         //Step the physics world
         world.step(1/60);
-        //cannonDebugRenderer.update();
         
         //DEBUG
         /*let r = [];
